@@ -90,6 +90,8 @@ const CSS = `
   .dt-sidebar-nav a:hover { color:var(--dt-text) }
   .dt-sidebar-nav a.active { color:var(--dt-accent);font-weight:500 }
   .dt-sidebar-nav a.active::before { background:var(--dt-accent) }
+  .dt-sidebar-nav a:focus { outline:none }
+  .dt-sidebar-nav a:focus-visible { outline:2px solid var(--dt-accent);outline-offset:2px;border-radius:4px }
   .dt-sidebar-num { font-family:'Fraunces',serif;font-style:italic;font-size:13px;font-weight:500;color:var(--dt-text-subtle);text-align:right;white-space:nowrap }
   .dt-sidebar-nav a.active .dt-sidebar-num { color:var(--dt-accent) }
   .dt-main { padding:0 56px;min-width:0 }
@@ -1709,65 +1711,180 @@ function DiagramScrumban() {
 // ─── Diagram: Security ────────────────────────────────────────────────────────
 function DiagramSecurity() {
   const layers = [
-    { label: "Rede & Nginx", sub: "rate limit · HTTPS · headers", color: "#5B6EAE", r: 250 },
-    { label: "Autenticação", sub: "Auth.js · argon2 · MFA · rate limit", color: "var(--dt-tier2)", r: 200 },
-    { label: "Autorização", sub: "RBAC · IDOR prevention · middleware", color: "var(--dt-tier1)", r: 152 },
-    { label: "Validação", sub: "Zod · TypeScript · constraints DB", color: "var(--dt-tier3)", r: 106 },
-    { label: "Dados", sub: "criptografia · audit log · redaction", color: "#8B5E3C", r: 60 },
+    { label: "Rede & Nginx",     sub: "rate limiting · HTTPS/TLS · headers de segurança",  color: "#5B6EAE" },
+    { label: "Autenticação",     sub: "Auth.js · argon2id · MFA · bloqueio por brute force", color: "#A66B14" },
+    { label: "Autorização",      sub: "RBAC multi-tenant · IDOR prevention · middleware",   color: "#B43A2B" },
+    { label: "Validação",        sub: "Zod · TypeScript · constraints no banco",            color: "#3B6E47" },
+    { label: "Dados do cliente", sub: "criptografia · audit log · mascaramento",            color: "#8B5E3C" },
   ];
 
-  const cx = 360, cy = 140;
+  const bH = 52, gap = 7, indent = 46;
 
   return (
     <div className="dt-diagram">
       <div className="dt-diagram-title">Defesa em profundidade — camadas de segurança</div>
-      <svg viewBox="0 0 720 290" style={{ display: "block", width: "100%", height: "auto", padding: "8px" }}>
-        {/* Rings — outermost first */}
-        {[...layers].reverse().map((l, i) => (
-          <circle key={l.label} cx={cx} cy={cy} r={l.r}
-            fill={l.color} fillOpacity={0.06 + i * 0.02}
-            stroke={l.color} strokeWidth={1.5} strokeOpacity={0.4} />
-        ))}
+      <svg viewBox="0 0 720 316" style={{ display: "block", width: "100%", height: "auto" }}>
+        <defs>
+          {layers.map((l, i) => (
+            <linearGradient key={l.label} id={`sec-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={l.color} stopOpacity="0.18" />
+              <stop offset="100%" stopColor={l.color} stopOpacity="0.04" />
+            </linearGradient>
+          ))}
+        </defs>
 
-        {/* Center circle */}
-        <circle cx={cx} cy={cy} r={28} fill="var(--dt-accent)" fillOpacity={0.15}
-          stroke="var(--dt-accent)" strokeWidth={1.5} />
-        <text x={cx} y={cy - 5} fill="var(--dt-accent)" fontSize={10} fontWeight={700}
-          fontFamily="Inter,sans-serif" textAnchor="middle">Dados do</text>
-        <text x={cx} y={cy + 8} fill="var(--dt-accent)" fontSize={10} fontWeight={700}
-          fontFamily="Inter,sans-serif" textAnchor="middle">cliente</text>
-
-        {/* Labels — one per ring, positioned at right edge of each ring */}
         {layers.map((l, i) => {
-          const angle = -30 + i * 12; // spread labels so they don't overlap
-          const rad = (angle * Math.PI) / 180;
-          const lx = cx + (l.r + 8) * Math.cos(rad);
-          const ly = cy + (l.r + 8) * Math.sin(rad);
-          const anchor = lx > cx ? "start" : "end";
+          const x = 4 + i * indent;
+          const w = 712 - i * indent * 2;
+          const y = i * (bH + gap);
+          const isLast = i === layers.length - 1;
           return (
             <g key={l.label}>
-              {/* dot on ring */}
-              <circle cx={cx + l.r * Math.cos(rad)} cy={cy + l.r * Math.sin(rad)} r={4}
-                fill={l.color} />
-              {/* line from ring edge to label */}
-              <line x1={cx + (l.r + 2) * Math.cos(rad)} y1={cy + (l.r + 2) * Math.sin(rad)}
-                x2={lx + (anchor === "start" ? 8 : -8)} y2={ly}
-                stroke={l.color} strokeWidth={1} opacity={0.5} />
-              <text x={lx + (anchor === "start" ? 10 : -10)} y={ly - 5}
-                fill={l.color} fontSize={11} fontWeight={700}
-                fontFamily="Inter,sans-serif" textAnchor={anchor}>{l.label}</text>
-              <text x={lx + (anchor === "start" ? 10 : -10)} y={ly + 8}
-                fill="var(--dt-text-muted)" fontSize={9.5}
-                fontFamily="Inter,sans-serif" textAnchor={anchor}>{l.sub}</text>
+              {/* Band background */}
+              <rect x={x} y={y} width={w} height={bH} rx={10}
+                fill={`url(#sec-grad-${i})`}
+                stroke={l.color} strokeWidth={1.5} strokeOpacity={0.45} />
+              {/* Left accent bar */}
+              <rect x={x} y={y} width={7} height={bH} rx={5}
+                fill={l.color} fillOpacity={0.75} />
+              {/* Layer number badge */}
+              <circle cx={x + 22} cy={y + bH / 2} r={11}
+                fill={l.color} fillOpacity={0.15} stroke={l.color} strokeWidth={1.2} />
+              <text x={x + 22} y={y + bH / 2 + 4} fill={l.color} fontSize={11} fontWeight={700}
+                fontFamily="Inter,sans-serif" textAnchor="middle">{i + 1}</text>
+              {/* Layer name */}
+              <text x={x + 42} y={y + bH / 2 - 6} fill={l.color} fontSize={13} fontWeight={700}
+                fontFamily="Inter,sans-serif" dominantBaseline="auto">{l.label}</text>
+              {/* Sub label */}
+              <text x={x + 42} y={y + bH / 2 + 12} fill="var(--dt-text-muted)" fontSize={10.5}
+                fontFamily="Inter,sans-serif">{l.sub}</text>
+              {/* Right shield marker for innermost */}
+              {isLast && (
+                <text x={x + w - 14} y={y + bH / 2 + 5} fill={l.color} fontSize={16}
+                  fontFamily="Inter,sans-serif" textAnchor="middle">🔒</text>
+              )}
             </g>
           );
         })}
 
-        {/* Principle badge */}
-        <rect x={10} y={255} width={200} height={24} rx="6"
-          fill="var(--dt-surface)" stroke="var(--dt-border)" />
-        <text x={20} y={271} fill="var(--dt-text-muted)" fontSize={10}
-          fontFamily="Inter,sans-serif">Princípio: se uma camada falha, as outras seguram</text>
+        {/* Arrow pointing inward */}
+        <text x={360} y={290} fill="var(--dt-text-subtle)" fontSize={11}
+          fontFamily="Inter,sans-serif" textAnchor="middle" fontStyle="italic">
+          ↑ cada camada é independente — se uma falha, as demais seguram
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+// ─── RBAC multi-tenant diagram ────────────────────────────────────────────────
+function DiagramRBAC() {
+  const modules = [
+    { label: "AMCC",        color: "#5B6EAE", bg: "#E8EBF7" },
+    { label: "Calculadora", color: "#A66B14", bg: "#F5E8D0" },
+    { label: "RAS",         color: "#3B6E47", bg: "#DCEAE0" },
+    { label: "Calendário",  color: "#8B5E3C", bg: "#F5EDE4" },
+  ];
+
+  const roles = [
+    { label: "owner",  color: "#B43A2B", bg: "#F5E3DE" },
+    { label: "admin",  color: "#A66B14", bg: "#F5E8D0" },
+    { label: "member", color: "#3B6E47", bg: "#DCEAE0" },
+  ];
+
+  // Module box positions (inside org container)
+  const orgX = 44, orgY = 96, orgW = 632, orgH = 118;
+  const modW = 130, modH = 52, modGap = 14;
+  const totalModW = modules.length * modW + (modules.length - 1) * modGap;
+  const modOffsetX = orgX + (orgW - totalModW) / 2;
+  const modY = orgY + 32;
+
+  return (
+    <div className="dt-diagram">
+      <div className="dt-diagram-title">Modelo RBAC multi-tenant</div>
+      <svg viewBox="0 0 720 278" style={{ display: "block", width: "100%", height: "auto" }}>
+
+        {/* ── User card ── */}
+        <rect x={270} y={8} width={180} height={64} rx={12}
+          fill="var(--dt-surface)" stroke="var(--dt-border)" strokeWidth={1.5} />
+        {/* Person icon */}
+        <circle cx={302} cy={32} r={10} fill="none" stroke="var(--dt-text-muted)" strokeWidth={1.5} />
+        <path d="M286 64 Q286 52 302 52 Q318 52 318 64"
+          fill="none" stroke="var(--dt-text-muted)" strokeWidth={1.5} strokeLinecap="round" />
+        <text x={325} y={28} fill="var(--dt-text)" fontSize={13} fontWeight={700}
+          fontFamily="Inter,sans-serif">Usuário</text>
+        {/* Role pills */}
+        {roles.map((r, i) => (
+          <g key={r.label}>
+            <rect x={325 + i * 50} y={36} width={44} height={18} rx={6}
+              fill={r.bg} stroke={r.color} strokeWidth={1} />
+            <text x={347 + i * 50} y={49} fill={r.color} fontSize={9.5} fontWeight={600}
+              fontFamily="Inter,sans-serif" textAnchor="middle">{r.label}</text>
+          </g>
+        ))}
+
+        {/* ── Arrow user → org ── */}
+        <line x1={360} y1={72} x2={360} y2={94} stroke="var(--dt-border-strong)"
+          strokeWidth={1.5} markerEnd="url(#arrow)" />
+        <text x={368} y={86} fill="var(--dt-text-subtle)" fontSize={10}
+          fontFamily="Inter,sans-serif">pertence a (com role)</text>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="var(--dt-border-strong)" />
+          </marker>
+          <marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="var(--dt-border-strong)" />
+          </marker>
+        </defs>
+
+        {/* ── Organization container ── */}
+        <rect x={orgX} y={orgY} width={orgW} height={orgH} rx={14}
+          fill="var(--dt-surface)" stroke="var(--dt-accent)" strokeWidth={1.5}
+          strokeDasharray="6,4" />
+        <text x={orgX + 16} y={orgY + 20} fill="var(--dt-accent)" fontSize={11} fontWeight={700}
+          fontFamily="Inter,sans-serif" letterSpacing="0.06em">ORGANIZAÇÃO</text>
+        {/* tenantId badge */}
+        <rect x={orgX + orgW - 150} y={orgY + 8} width={138} height={20} rx={6}
+          fill="var(--dt-accent-soft)" stroke="var(--dt-accent-soft-2)" />
+        <text x={orgX + orgW - 81} y={orgY + 21} fill="var(--dt-accent)" fontSize={9.5}
+          fontFamily="Inter,sans-serif" textAnchor="middle" fontWeight={600}>
+          tenantId isolado por schema
+        </text>
+
+        {/* ── Module boxes ── */}
+        {modules.map((m, i) => {
+          const mx = modOffsetX + i * (modW + modGap);
+          return (
+            <g key={m.label}>
+              <rect x={mx} y={modY} width={modW} height={modH} rx={10}
+                fill={m.bg} stroke={m.color} strokeWidth={1.5} />
+              <text x={mx + modW / 2} y={modY + 22} fill={m.color} fontSize={12} fontWeight={700}
+                fontFamily="Inter,sans-serif" textAnchor="middle">{m.label}</text>
+              <text x={mx + modW / 2} y={modY + 38} fill="var(--dt-text-muted)" fontSize={9.5}
+                fontFamily="Inter,sans-serif" textAnchor="middle">acesso por role</text>
+            </g>
+          );
+        })}
+
+        {/* ── Arrow org → db ── */}
+        <line x1={360} y1={orgY + orgH} x2={360} y2={226} stroke="var(--dt-border-strong)"
+          strokeWidth={1.5} markerEnd="url(#arrow2)" />
+        <text x={368} y={221} fill="var(--dt-text-subtle)" fontSize={10}
+          fontFamily="Inter,sans-serif">queries filtradas por organizationId</text>
+
+        {/* ── Database ── */}
+        <rect x={238} y={228} width={244} height={38} rx={8}
+          fill="var(--dt-surface)" stroke="var(--dt-border-strong)" strokeWidth={1.5} />
+        <text x={360} y={243} fill="var(--dt-text)" fontSize={11} fontWeight={700}
+          fontFamily="Inter,sans-serif" textAnchor="middle">PostgreSQL</text>
+        <text x={360} y={258} fill="var(--dt-text-muted)" fontSize={10}
+          fontFamily="Inter,sans-serif" textAnchor="middle">schemas isolados · organizationId em toda query</text>
+
+        {/* ── 3-layer verification note ── */}
+        <text x={360} y={277} fill="var(--dt-text-subtle)" fontSize={10}
+          fontFamily="Inter,sans-serif" textAnchor="middle" fontStyle="italic">
+          Verificação em 3 camadas: Middleware → Lógica de aplicação → UI
+        </text>
       </svg>
     </div>
   );
@@ -3198,11 +3315,7 @@ Set-Cookie: sessionId=...; HttpOnly; Secure; SameSite=Strict; Path=/
 
 Modelo baseado em **RBAC multi-tenant**, conforme definido em 6.6:
 
-\`\`\`
-Usuário → pertence a → Organização → tem acesso a → Módulos
-   ↑
-   tem Role na organização
-\`\`\`
+RBAC_DIAGRAM_PLACEHOLDER
 
 **Verificação em três camadas:**
 
@@ -4337,6 +4450,7 @@ export default function App() {
     "MONITORING_DIAGRAM_PLACEHOLDER",
     "DEVFORMATION_DIAGRAM_PLACEHOLDER",
     "ROADMAP_DIAGRAM_PLACEHOLDER",
+    "RBAC_DIAGRAM_PLACEHOLDER",
   ] as const;
   type DiagramKey = typeof DIAGRAM_MARKERS[number];
 
@@ -4426,14 +4540,8 @@ export default function App() {
     setView("doc");
     setActiveSec(num);
     requestAnimationFrame(() => {
-      setTimeout(() => {
-        const el = document.getElementById(`sec-${num}`);
-        if (el)
-          el.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-      }, 100);
+      const el = document.getElementById(`sec-${num}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, []);
 
@@ -4593,7 +4701,7 @@ export default function App() {
                   .map((s) => (
                     <li key={s.num}>
                       <a
-                        href={`#sec-${s.num}`}
+                        href="#"
                         className={
                           activeSec === s.num ? "active" : ""
                         }
@@ -4625,6 +4733,7 @@ export default function App() {
                   if (chunk === "MONITORING_DIAGRAM_PLACEHOLDER") return <DiagramMonitoring key={i} />;
                   if (chunk === "DEVFORMATION_DIAGRAM_PLACEHOLDER") return <DiagramDevFormation key={i} />;
                   if (chunk === "ROADMAP_DIAGRAM_PLACEHOLDER")      return <DiagramRoadmap      key={i} />;
+                  if (chunk === "RBAC_DIAGRAM_PLACEHOLDER")        return <DiagramRBAC          key={i} />;
                   return chunk.trim()
                     ? <div key={i} className="dt-md" dangerouslySetInnerHTML={{ __html: chunk }} />
                     : null;
