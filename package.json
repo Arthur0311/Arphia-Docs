@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "seed:docs": "npx tsx scripts/seed-docs.ts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
