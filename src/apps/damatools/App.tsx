@@ -1606,83 +1606,87 @@ function DiagramCICD() {
 // ─── Diagram: Scrumban ────────────────────────────────────────────────────────
 function DiagramScrumban() {
   const cols = [
-    { label: "Backlog", color: "var(--dt-surface-2)" },
-    { label: "Sprint\nPlanning", color: "var(--dt-tier2-bg)" },
-    {
-      label: "Em andamento\n(WIP: 2)",
-      color: "var(--dt-accent-soft)",
-    },
-    { label: "Review", color: "var(--dt-tier2-bg)" },
-    { label: "Done", color: "var(--dt-tier3-bg)" },
+    { label: "Backlog", color: "var(--dt-surface-2)", border: "var(--dt-border)", cards: [] as {text:string,tier:number}[] },
+    { label: "A fazer", color: "var(--dt-surface)", border: "var(--dt-border)", cards: [
+      { text: "Tier 1: Calculadora IOF", tier: 1 },
+      { text: "Tier 3: Ajuste de CSS", tier: 3 },
+    ]},
+    { label: "Em andamento (WIP: 2)", color: "var(--dt-accent-soft)", border: "var(--dt-accent)", cards: [
+      { text: "Tier 2: Tela de resultados", tier: 2 },
+      { text: "Tier 1: Amortização SAC", tier: 1 },
+    ]},
+    { label: "Review", color: "var(--dt-tier2-bg)", border: "var(--dt-tier2)", cards: [
+      { text: "Tier 3: Documentação API", tier: 3 },
+    ]},
+    { label: "Concluído", color: "var(--dt-tier3-bg)", border: "var(--dt-tier3)", cards: [
+      { text: "Tier 3: Componente Header", tier: 3 },
+      { text: "Tier 2: Formulário cadastro", tier: 2 },
+    ]},
   ];
+
+  const tierColors: Record<number,string> = {
+    1: "var(--dt-tier1)",
+    2: "var(--dt-tier2)",
+    3: "var(--dt-tier3)",
+  };
+  const tierBgs: Record<number,string> = {
+    1: "var(--dt-tier1-bg)",
+    2: "var(--dt-tier2-bg)",
+    3: "var(--dt-tier3-bg)",
+  };
+
+  const colW = 124, gap = 9, totalW = cols.length * colW + (cols.length - 1) * gap;
+  const startX = (720 - totalW) / 2;
+
   return (
     <div className="dt-diagram">
-      <div className="dt-diagram-title">
-        Ciclo semanal Scrumban
-      </div>
-      <svg
-        viewBox="0 0 720 180"
-        style={{
-          display: "block",
-          width: "100%",
-          height: "auto",
-          padding: "20px 12px",
-        }}
-      >
-        {cols.map((c, i) => {
-          const x = 30 + i * 134;
+      <div className="dt-diagram-title">Board Scrumban — exemplo de sprint</div>
+      <svg viewBox="0 0 720 220" style={{ display: "block", width: "100%", height: "auto", padding: "12px 8px" }}>
+        {cols.map((col, ci) => {
+          const x = startX + ci * (colW + gap);
           return (
-            <g key={c.label}>
-              <rect
-                x={x}
-                y={20}
-                width={120}
-                height={140}
-                rx="10"
-                fill={c.color}
-                stroke="var(--dt-border)"
-                strokeWidth={1}
-              />
-              <text
-                x={x + 60}
-                y={46}
-                fill="var(--dt-text)"
-                fontSize={11}
-                fontWeight={600}
-                fontFamily="Inter,sans-serif"
-                textAnchor="middle"
-              >
-                {c.label.split("\n")[0]}
-              </text>
-              {c.label.includes("\n") && (
-                <text
-                  x={x + 60}
-                  y={60}
-                  fill="var(--dt-text)"
-                  fontSize={11}
-                  fontWeight={600}
-                  fontFamily="Inter,sans-serif"
-                  textAnchor="middle"
-                >
-                  {c.label.split("\n")[1]}
-                </text>
-              )}
-              {[0, 1].map((j) => (
-                <rect
-                  key={j}
-                  x={x + 12}
-                  y={74 + j * 36}
-                  width={96}
-                  height={28}
-                  rx="6"
-                  fill="var(--dt-bg)"
-                  stroke="var(--dt-border)"
-                  strokeWidth={1}
-                />
+            <g key={col.label}>
+              {/* Column header */}
+              <rect x={x} y={10} width={colW} height={26} rx="7"
+                fill={col.color} stroke={col.border} strokeWidth={1} />
+              <text x={x + colW / 2} y={27} fill="var(--dt-text)" fontSize={10} fontWeight={600}
+                fontFamily="Inter,sans-serif" textAnchor="middle">{col.label}</text>
+              {/* Cards */}
+              {col.cards.map((card, i) => (
+                <g key={card.text}>
+                  <rect x={x + 4} y={44 + i * 52} width={colW - 8} height={44} rx="6"
+                    fill={tierBgs[card.tier]} stroke={tierColors[card.tier]} strokeWidth={1} />
+                  {/* Tier badge */}
+                  <rect x={x + 8} y={48 + i * 52} width={36} height={14} rx="3"
+                    fill={tierColors[card.tier]} />
+                  <text x={x + 26} y={59 + i * 52} fill="white" fontSize={8} fontWeight={700}
+                    fontFamily="Inter,sans-serif" textAnchor="middle">{`Tier ${card.tier}`}</text>
+                  {/* Card text */}
+                  {card.text.length > 18 ? (
+                    <>
+                      <text x={x + 8} y={71 + i * 52} fill="var(--dt-text)" fontSize={9.5}
+                        fontFamily="Inter,sans-serif">{card.text.slice(0, 18)}</text>
+                      <text x={x + 8} y={82 + i * 52} fill="var(--dt-text)" fontSize={9.5}
+                        fontFamily="Inter,sans-serif">{card.text.slice(18)}</text>
+                    </>
+                  ) : (
+                    <text x={x + 8} y={77 + i * 52} fill="var(--dt-text)" fontSize={9.5}
+                      fontFamily="Inter,sans-serif">{card.text}</text>
+                  )}
+                </g>
               ))}
             </g>
           );
         })}
+        {/* Legend */}
+        {[{t:1,l:"Tier 1 — Crítico"},{t:2,l:"Tier 2 — Padrão"},{t:3,l:"Tier 3 — Baixo risco"}].map((item,i) => (
+          <g key={item.t}>
+            <rect x={30 + i * 222} y={192} width={10} height={10} rx="2"
+              fill={tierColors[item.t]} />
+            <text x={44 + i * 222} y={201} fill="var(--dt-text-muted)" fontSize={10}
+              fontFamily="Inter,sans-serif">{item.l}</text>
+          </g>
+        ))}
       </svg>
     </div>
   );
@@ -1691,78 +1695,65 @@ function DiagramScrumban() {
 // ─── Diagram: Security ────────────────────────────────────────────────────────
 function DiagramSecurity() {
   const layers = [
-    { label: "Cloudflare / DNS", color: "var(--dt-tier1)" },
-    {
-      label: "Nginx · rate limit · headers",
-      color: "var(--dt-tier2)",
-    },
-    {
-      label: "Next.js middleware · auth",
-      color: "var(--dt-tier2)",
-    },
-    {
-      label: "Validação de input · Zod",
-      color: "var(--dt-tier3)",
-    },
-    {
-      label: "PostgreSQL · RLS · schemas isolados",
-      color: "var(--dt-tier3)",
-    },
+    { label: "Rede & Nginx", sub: "rate limit · HTTPS · headers", color: "#5B6EAE", r: 250 },
+    { label: "Autenticação", sub: "Auth.js · argon2 · MFA · rate limit", color: "var(--dt-tier2)", r: 200 },
+    { label: "Autorização", sub: "RBAC · IDOR prevention · middleware", color: "var(--dt-tier1)", r: 152 },
+    { label: "Validação", sub: "Zod · TypeScript · constraints DB", color: "var(--dt-tier3)", r: 106 },
+    { label: "Dados", sub: "criptografia · audit log · redaction", color: "#8B5E3C", r: 60 },
   ];
+
+  const cx = 360, cy = 140;
+
   return (
     <div className="dt-diagram">
-      <div className="dt-diagram-title">
-        Camadas de defesa em profundidade
-      </div>
-      <svg
-        viewBox="0 0 720 200"
-        style={{
-          display: "block",
-          width: "100%",
-          height: "auto",
-          padding: "20px 12px",
-        }}
-      >
+      <div className="dt-diagram-title">Defesa em profundidade — camadas de segurança</div>
+      <svg viewBox="0 0 720 290" style={{ display: "block", width: "100%", height: "auto", padding: "8px" }}>
+        {/* Rings — outermost first */}
+        {[...layers].reverse().map((l, i) => (
+          <circle key={l.label} cx={cx} cy={cy} r={l.r}
+            fill={l.color} fillOpacity={0.06 + i * 0.02}
+            stroke={l.color} strokeWidth={1.5} strokeOpacity={0.4} />
+        ))}
+
+        {/* Center circle */}
+        <circle cx={cx} cy={cy} r={28} fill="var(--dt-accent)" fillOpacity={0.15}
+          stroke="var(--dt-accent)" strokeWidth={1.5} />
+        <text x={cx} y={cy - 5} fill="var(--dt-accent)" fontSize={10} fontWeight={700}
+          fontFamily="Inter,sans-serif" textAnchor="middle">Dados do</text>
+        <text x={cx} y={cy + 8} fill="var(--dt-accent)" fontSize={10} fontWeight={700}
+          fontFamily="Inter,sans-serif" textAnchor="middle">cliente</text>
+
+        {/* Labels — one per ring, positioned at right edge of each ring */}
         {layers.map((l, i) => {
-          const w = 640 - i * 60;
-          const x = (640 - w) / 2 + 40;
-          const y = 20 + i * 34;
+          const angle = -30 + i * 12; // spread labels so they don't overlap
+          const rad = (angle * Math.PI) / 180;
+          const lx = cx + (l.r + 8) * Math.cos(rad);
+          const ly = cy + (l.r + 8) * Math.sin(rad);
+          const anchor = lx > cx ? "start" : "end";
           return (
             <g key={l.label}>
-              <rect
-                x={x}
-                y={y}
-                width={w}
-                height={28}
-                rx="7"
-                fill={l.color}
-                opacity={0.15}
-                stroke={l.color}
-                strokeWidth={1}
-              />
-              <text
-                x={360}
-                y={y + 18}
-                fill="var(--dt-text)"
-                fontSize={11.5}
-                fontFamily="Inter,sans-serif"
-                textAnchor="middle"
-              >
-                {l.label}
-              </text>
+              {/* dot on ring */}
+              <circle cx={cx + l.r * Math.cos(rad)} cy={cy + l.r * Math.sin(rad)} r={4}
+                fill={l.color} />
+              {/* line from ring edge to label */}
+              <line x1={cx + (l.r + 2) * Math.cos(rad)} y1={cy + (l.r + 2) * Math.sin(rad)}
+                x2={lx + (anchor === "start" ? 8 : -8)} y2={ly}
+                stroke={l.color} strokeWidth={1} opacity={0.5} />
+              <text x={lx + (anchor === "start" ? 10 : -10)} y={ly - 5}
+                fill={l.color} fontSize={11} fontWeight={700}
+                fontFamily="Inter,sans-serif" textAnchor={anchor}>{l.label}</text>
+              <text x={lx + (anchor === "start" ? 10 : -10)} y={ly + 8}
+                fill="var(--dt-text-muted)" fontSize={9.5}
+                fontFamily="Inter,sans-serif" textAnchor={anchor}>{l.sub}</text>
             </g>
           );
         })}
-        <text
-          x={360}
-          y={192}
-          fill="var(--dt-text-subtle)"
-          fontSize={10}
-          fontFamily="Inter,sans-serif"
-          textAnchor="middle"
-        >
-          Dados · PostgreSQL
-        </text>
+
+        {/* Principle badge */}
+        <rect x={10} y={255} width={200} height={24} rx="6"
+          fill="var(--dt-surface)" stroke="var(--dt-border)" />
+        <text x={20} y={271} fill="var(--dt-text-muted)" fontSize={10}
+          fontFamily="Inter,sans-serif">Princípio: se uma camada falha, as outras seguram</text>
       </svg>
     </div>
   );
@@ -1828,6 +1819,158 @@ function DiagramMonitoring() {
   );
 }
 
+// ─── Diagram: Dev Formation ───────────────────────────────────────────────────
+function DiagramDevFormation() {
+  const phases = [
+    {
+      num: "0",
+      label: "Fundamentos",
+      period: "Semanas 1–8",
+      color: "var(--dt-text-subtle)",
+      bg: "var(--dt-surface-2)",
+      items: ["Lógica de programação", "Git e ambiente", "Leitura de código", "Sem entrega de produto"],
+    },
+    {
+      num: "1",
+      label: "Primeiro código",
+      period: "Semanas 9–16",
+      color: "var(--dt-tier3)",
+      bg: "var(--dt-tier3-bg)",
+      items: ["Exclusivamente Tier 3", "Alta supervisão", "PR diário ou a cada 50 linhas", "1h pair/dia"],
+    },
+    {
+      num: "2",
+      label: "Autonomia gradual",
+      period: "Semanas 17–24",
+      color: "var(--dt-tier2)",
+      bg: "var(--dt-tier2-bg)",
+      items: ["Tier 3 com autonomia", "Primeiros Tier 2", "WIP limit: 2", "Pair: 1x/semana"],
+    },
+    {
+      num: "3",
+      label: "Maturação",
+      period: "A partir do 6º mês",
+      color: "var(--dt-tier1)",
+      bg: "var(--dt-tier1-bg)",
+      items: ["Tier 2 pleno", "Tier 1 em pair", "Contribui à arquitetura", "Revisa Tier 3"],
+    },
+  ];
+
+  const cardW = 150, gap = 20, connH = 40, totalW = phases.length * cardW + (phases.length - 1) * gap;
+  const startX = (720 - totalW) / 2;
+  const cardH = 145;
+
+  return (
+    <div className="dt-diagram">
+      <div className="dt-diagram-title">Fases de integração do desenvolvedor</div>
+      <svg viewBox="0 0 720 240" style={{ display: "block", width: "100%", height: "auto", padding: "16px 8px" }}>
+        {/* Connecting spine */}
+        <line
+          x1={startX + cardW / 2} y1={connH + cardH / 2}
+          x2={startX + (phases.length - 1) * (cardW + gap) + cardW / 2} y2={connH + cardH / 2}
+          stroke="var(--dt-border-strong)" strokeWidth={2} strokeDasharray="5,3"
+        />
+        {phases.map((phase, i) => {
+          const x = startX + i * (cardW + gap);
+          return (
+            <g key={phase.num}>
+              {/* Card */}
+              <rect x={x} y={connH} width={cardW} height={cardH} rx="10"
+                fill={phase.bg} stroke={phase.color} strokeWidth={1.5} />
+              {/* Phase number badge */}
+              <circle cx={x + cardW / 2} cy={connH} r={16} fill={phase.color} />
+              <text x={x + cardW / 2} y={connH + 5} fill="white" fontSize={13} fontWeight={700}
+                fontFamily="'Fraunces',serif" textAnchor="middle" fontStyle="italic">{phase.num}</text>
+              {/* Label */}
+              <text x={x + cardW / 2} y={connH + 26} fill={phase.color} fontSize={11.5} fontWeight={700}
+                fontFamily="Inter,sans-serif" textAnchor="middle">{phase.label}</text>
+              {/* Period */}
+              <text x={x + cardW / 2} y={connH + 40} fill="var(--dt-text-muted)" fontSize={9.5}
+                fontFamily="Inter,sans-serif" textAnchor="middle" fontStyle="italic">{phase.period}</text>
+              {/* Divider */}
+              <line x1={x + 10} y1={connH + 48} x2={x + cardW - 10} y2={connH + 48}
+                stroke={phase.color} strokeWidth={0.5} opacity={0.4} />
+              {/* Items */}
+              {phase.items.map((item, j) => (
+                <g key={item}>
+                  <circle cx={x + 14} cy={connH + 60 + j * 20} r={2.5} fill={phase.color} opacity={0.7} />
+                  <text x={x + 22} y={connH + 64 + j * 20} fill="var(--dt-text)" fontSize={9.5}
+                    fontFamily="Inter,sans-serif">{item}</text>
+                </g>
+              ))}
+            </g>
+          );
+        })}
+        {/* Arrows between phases */}
+        {phases.slice(0, -1).map((_, i) => {
+          const ax = startX + (i + 1) * (cardW + gap) - gap / 2;
+          const ay = connH + cardH / 2;
+          return (
+            <g key={i}>
+              <polygon points={`${ax - 5},${ay - 5} ${ax + 6},${ay} ${ax - 5},${ay + 5}`}
+                fill="var(--dt-border-strong)" />
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ─── Diagram: Roadmap ─────────────────────────────────────────────────────────
+function DiagramRoadmap() {
+  const phases = [
+    { label: "Mês 1", sub: "Fundação", color: "var(--dt-tier3)", items: ["Infra + CI/CD", "Dev: estudo", "CLAUDE.md"] },
+    { label: "Meses 2-3", sub: "Estabilização", color: "var(--dt-tier2)", items: ["AMCC beta", "Dev: Tier 3", "Primeiras features"] },
+    { label: "Meses 4-6", sub: "Maturação", color: "var(--dt-tier1)", items: ["Calculadora v1", "Dev: Tier 2", "Clientes piloto"] },
+    { label: "Mês 7+", sub: "Operação", color: "#5B6EAE", items: ["Roadmap Fase 1", "Dev pleno", "Avaliação trimestral"] },
+  ];
+
+  const colW = 154, gap = 12, totalW = phases.length * colW + (phases.length - 1) * gap;
+  const startX = (720 - totalW) / 2;
+
+  return (
+    <div className="dt-diagram">
+      <div className="dt-diagram-title">Roadmap de implantação</div>
+      <svg viewBox="0 0 720 175" style={{ display: "block", width: "100%", height: "auto", padding: "16px 8px" }}>
+        {/* Connecting spine */}
+        <line x1={startX} y1={44} x2={startX + totalW} y2={44} stroke="var(--dt-border)" strokeWidth={1.5} />
+        {phases.map((phase, i) => {
+          const x = startX + i * (colW + gap);
+          return (
+            <g key={phase.label}>
+              {/* Timeline dot */}
+              <circle cx={x + colW / 2} cy={44} r={8} fill={phase.color} />
+              {/* Month label above */}
+              <text x={x + colW / 2} y={20} fill={phase.color} fontSize={12} fontWeight={700}
+                fontFamily="Inter,sans-serif" textAnchor="middle">{phase.label}</text>
+              <text x={x + colW / 2} y={34} fill="var(--dt-text-muted)" fontSize={9.5}
+                fontFamily="Inter,sans-serif" textAnchor="middle">{phase.sub}</text>
+              {/* Card below */}
+              <rect x={x} y={58} width={colW} height={95} rx="8"
+                fill="var(--dt-surface)" stroke={phase.color} strokeWidth={1} opacity={0.9} />
+              {phase.items.map((item, j) => (
+                <g key={item}>
+                  <circle cx={x + 14} cy={76 + j * 26} r={3} fill={phase.color} />
+                  <text x={x + 24} y={80 + j * 26} fill="var(--dt-text)" fontSize={10.5}
+                    fontFamily="Inter,sans-serif">{item}</text>
+                </g>
+              ))}
+              {/* Arrow */}
+              {i < phases.length - 1 && (
+                <polygon
+                  points={`${x + colW + 4},${40} ${x + colW + gap - 4},${44} ${x + colW + 4},${48}`}
+                  fill="var(--dt-border-strong)"
+                />
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 // ─── Markdown content (modified) ──────────────────────────────────────────────
 function buildMarkdown(): string {
   return `# Processo de Desenvolvimento — Arphia / DamaTools
@@ -1857,9 +2000,10 @@ Versão 1.2 · Junho de 2026
 13. Uso da Inteligência Artificial
 14. Segurança da aplicação
 15. Code Review e qualidade
-16. Roadmap de implantação
-17. Indicadores de saúde do processo
-18. Apêndices
+16. Monitoramento e observabilidade
+17. Roadmap de implantação
+18. Indicadores de saúde do processo
+19. Apêndices
 
 ---
 
@@ -1993,6 +2137,8 @@ Quatro princípios sustentam todas as decisões de processo descritas neste docu
 
 ## 3. Plano de formação do desenvolvedor
 
+DEVFORMATION_DIAGRAM_PLACEHOLDER
+
 O processo de integração do desenvolvedor é estruturado em fases progressivas. O objetivo é garantir que contribuições ao codebase aumentem gradualmente em escopo e criticidade, em paralelo com a evolução da compreensão técnica e de domínio.
 
 ### 3.1 Fases de integração
@@ -2024,6 +2170,18 @@ Quatro sinais a observar ao longo do processo:
 4. **Leitura do codebase** — aumentando (navega sem ajuda)
 
 Esses indicadores são discutidos na retrospectiva quinzenal.
+
+### 3.4 Sinais de alerta
+
+Sinais de que algo está errado na formação:
+
+- Dev copia e cola código de IA sem conseguir explicar o que faz
+- PRs ficam estagnados por dias sem resposta às dúvidas
+- Mesmo tipo de erro aparece repetidamente
+- Dev evita perguntar (medo de demonstrar não saber)
+- Bugs em produção em código que ele escreveu
+
+Qualquer um desses sinais demanda intervenção rápida — geralmente recuar uma fase e reforçar fundamentos.
 
 ---
 
@@ -2210,6 +2368,126 @@ CREATE SCHEMA ras;
 
 Cada módulo só acessa seu próprio schema. Queries cross-schema são proibidas e detectadas por lint.
 
+### 6.5 Comunicação entre módulos
+
+A regra padrão é: **módulos não se comunicam**. Cada módulo processa suas próprias requisições, lê e escreve no próprio schema e renderiza suas próprias telas.
+
+Quando a regra precisa ser quebrada, há três padrões aceitos, em ordem de preferência:
+
+**Padrão 1: o dado está em \`shared\`**
+
+Se o dado é genuinamente transversal (usuário, organização, log de auditoria), ele vive em \`/shared\` e ambos os módulos leem dali.
+
+**Padrão 2: serviço de aplicação na camada compartilhada**
+
+Quando há uma operação que envolve múltiplos módulos (ex: relatório consolidado), o código que orquestra essa operação vive em \`/src/services/\` ou em uma route handler, não dentro de um módulo específico.
+
+**Padrão 3: eventos de domínio (in-process)**
+
+Quando uma ação em um módulo deve gerar efeitos em outro de forma desacoplada:
+
+\`\`\`typescript
+// Módulo Calculator emite evento
+events.emit('simulation.created', { userId, simulationId });
+
+// /shared/audit escuta
+events.on('simulation.created', async (payload) => {
+  await auditLogger.record(payload);
+});
+\`\`\`
+
+Esse padrão tem vantagem estratégica: se o módulo for separado em microsserviço no futuro, o mesmo padrão vira mensageria (RabbitMQ, Kafka) com mudança mínima de código.
+
+### 6.6 Autenticação e autorização
+
+Centralizadas em \`/shared/auth\`. Cada módulo não implementa seu próprio login.
+
+**Modelo de dados:**
+
+\`\`\`
+shared.users
+  id, email, hashed_password, name, created_at
+
+shared.organizations
+  id, name, cnpj, plan
+
+shared.user_organizations
+  user_id, organization_id, role
+    role ∈ {owner, admin, member}
+
+shared.module_permissions
+  organization_id, module, enabled
+    module ∈ {calculator, amcc, ras, calendar, fgc, ...}
+\`\`\`
+
+Esse modelo suporta:
+- Multi-tenancy (uma instituição financeira = uma organization)
+- Múltiplos usuários por organização com papéis distintos
+- Controle granular de qual organização tem acesso a qual módulo
+
+**Middleware de autorização:**
+
+Toda rota protegida passa por um middleware compartilhado que:
+1. Valida a sessão do usuário
+2. Identifica a organização ativa
+3. Verifica se aquela organização tem permissão no módulo daquela rota
+4. Verifica se o usuário tem o papel necessário para a ação
+
+### 6.7 Configuração e feature flags
+
+Variáveis de ambiente seguem convenção de prefixo por módulo:
+
+\`\`\`bash
+# Compartilhadas
+DATABASE_URL=postgres://...
+SESSION_SECRET=...
+APP_URL=https://damatools.com.br
+
+# Módulo Calculator
+CALCULATOR_ENABLED=true
+CALCULATOR_MAX_INSTALLMENTS=600
+
+# Módulo AMCC
+AMCC_ENABLED=true
+AMCC_BCB_API_URL=https://...
+
+# Módulo RAS (ainda não implementado)
+RAS_ENABLED=false
+\`\`\`
+
+A flag \`{MODULE}_ENABLED\` é o **feature flag de módulo**: permite desabilitar um módulo inteiro sem precisar removê-lo do código. Útil para lançar módulos progressivamente, desabilitar em produção em caso de bug crítico, ou manter código em desenvolvimento ativo no repositório.
+
+### 6.8 Testes em arquitetura modular
+
+\`\`\`
+/tests
+  /modules
+    /calculator
+      /domain        # testes unitários de cálculos (críticos)
+      /services
+      /integration   # testes que tocam o schema 'calculator' do banco
+    /amcc
+  /shared            # testes de auth, decimal helpers, validators
+  /e2e               # testes end-to-end (poucos, mas existem)
+\`\`\`
+
+| Tipo | Cobertura ideal | Quando rodam |
+|---|---|---|
+| Unitário (domain/) | > 90% no Tier 1 | A cada save (watch mode) |
+| Integração (acesso a banco) | Fluxos principais | A cada PR (CI) |
+| End-to-end | Cenários críticos | Diariamente + antes de release |
+
+### 6.9 Quando reconsiderar a arquitetura
+
+| Sinal | O que pode ser separado |
+|---|---|
+| Um módulo consome desproporcionalmente mais CPU/RAM | Aquele módulo vira serviço próprio |
+| Um módulo precisa de SLA diferente (alta disponibilidade) | Idem |
+| Equipe cresce e times se dedicam a módulos diferentes | Separação ajuda autonomia |
+| Volume de dados de um módulo justifica banco próprio | Banco daquele módulo migra primeiro |
+
+O ponto importante: com o monolito modular bem construído, essa migração é cirúrgica. As fronteiras já existem no código, o schema já está separado, a comunicação entre módulos já passa por eventos. Migrar um módulo para serviço próprio passa a ser principalmente um exercício de infraestrutura, não uma reescrita arquitetural.
+
 ---
 
 ## 7. Plataformas e custos
@@ -2254,6 +2532,26 @@ Ferramentas de IA são priorizadas por seu impacto direto na qualidade e velocid
 - **Staging deve ser idêntico a produção em configuração** (mesma versão do Node, mesma versão do PostgreSQL).
 - **Variáveis de ambiente** são gerenciadas por arquivo \`.env\` local (não versionado) e por secrets do GitHub Actions para CI/CD.
 - **Acesso ao banco de produção** requer VPN ou autenticação de dois fatores via psql direto — nunca exposição pública.
+
+### 8.3 Banco de dados por ambiente
+
+| Ambiente | Banco PostgreSQL | Conteúdo | Backup |
+|---|---|---|---|
+| Local (cada dev) | Container Docker local | Dados fictícios, descartáveis | Não há |
+| Staging | \`arphia-db-dev\` (DO) | Dados de teste e homologação | Diário, retenção 7 dias |
+| Produção | \`arphia-db-prod\` (DO) | Dados reais de clientes | Diário, retenção 30 dias + snapshots semanais |
+
+**Princípio inegociável:** credenciais de \`arphia-db-prod\` nunca aparecem em ambiente de desenvolvimento, nunca são compartilhadas em chat ou e-mail, e o acesso direto ao banco de produção é feito apenas pelo tech lead, em momentos pontuais e auditados.
+
+### 8.4 DNS
+
+| Tipo | Nome | Destino |
+|---|---|---|
+| A | @ (raiz) | IP do servidor |
+| A | www | IP do servidor |
+| A | staging | IP do servidor |
+
+Ambos os subdomínios apontam para o mesmo servidor; o nginx diferencia por domínio.
 
 ---
 
@@ -2372,30 +2670,52 @@ Prioridade é definida pelo sócio de negócio em colaboração com o tech lead,
 2. Risco técnico (Tier)
 3. Valor de negócio
 
+### 11.5 Como tarefas são criadas
+
+Tarefas nascem em três caminhos:
+
+1. **Backlog estratégico** — sócio de negócio identifica necessidade do produto e cria issue
+2. **Bug ou melhoria técnica** — tech lead ou dev identificam e criam issue
+3. **Demanda de cliente** — sócio de negócio recebe e cria issue com prioridade elevada
+
+Toda issue criada precisa ter, antes de entrar no board:
+- Título descritivo
+- Descrição do que é e por quê
+- **Tier (label)**
+- Critério de aceite (como saber que está pronto)
+- Estimativa de esforço (P/M/G)
+
 ---
 
 ## 12. Comunicação
 
 ### 12.1 Canais no Slack
 
-| Canal | Propósito | Regras |
+| Canal | Propósito | Quem participa |
 |---|---|---|
-| \`#geral\` | Comunicação geral | Sem discussões técnicas longas |
-| \`#dev\` | Discussões técnicas | Pull requests, bugs, decisões |
-| \`#alertas\` | Notificações automáticas | Somente bots (CI, deploy, erros) |
-| \`#produto\` | Features e priorização | PO + Tech Lead |
+| \`#geral\` | Conversas, alinhamentos, decisões | Todos |
+| \`#daily\` | Status assíncrono diário | Tech lead e dev |
+| \`#notificacoes-dev\` | PRs abertos, reviews | Tech lead e dev |
+| \`#builds-e-deploys\` | CI, deploys, falhas de pipeline | Tech lead e dev |
+| \`#alertas-producao\` | Sentry, monitoramento, erros | Todos |
+| \`#dev-aprendizado\` | Dúvidas do dev, links de estudo | Tech lead e dev |
+| \`#negocio-cliente\` | Demandas de cliente, regulatório | Sócio de negócio e tech lead |
 
 ### 12.2 Integrações automáticas
 
 - GitHub → Slack: notificação em PRs abertos, CI falho, deploys
-- Sentry → Slack: erros em produção (canal \`#alertas\`)
+- Sentry → Slack: erros em produção (canal \`#alertas-producao\`)
 - Uptime Robot → Slack: downtime de staging ou produção
 
-### 12.3 Regras de comunicação
+### 12.3 Regras de uso
 
-- Decisões técnicas relevantes são documentadas no PR ou no \`CLAUDE.md\` — não ficam apenas no Slack
-- Dúvidas que levam mais de dois trocas de mensagem vão para uma call de 15 minutos
-- \`#alertas\` é canal de leitura — sem respostas humanas
+**Code review acontece no GitHub, não no Slack.** Slack avisa que o PR existe, mas a revisão fica no PR para ficar registrada.
+
+**Decisões importantes vão para documentação.** Conversas no Slack se perdem. Se uma decisão técnica for tomada via Slack, alguém precisa registrá-la em uma issue ou no \`CLAUDE.md\`.
+
+**Urgência tem canal próprio.** Se algo é realmente urgente (produção quebrada), é no \`#alertas-producao\` + mensagem direta. Caso contrário, mensagem assíncrona.
+
+**Respeitar foco profundo.** Tech lead em bloco de Tier 1 não responde Slack na hora.
 
 ---
 
@@ -2434,44 +2754,272 @@ O \`CLAUDE.md\` é a memória do projeto para a IA. Ele é mantido pelo tech lea
 
 Todo código gerado por IA que vai para produção passa pela mesma pipeline de revisão do código escrito manualmente. Não há atalho de revisão para código gerado.
 
+### 13.4 O que nunca compartilhar com IA
+
+- Conteúdo de arquivos \`.env\`
+- Credenciais, API keys, tokens
+- Dados reais de clientes (CPF, CNPJ, saldos, transações)
+- Documentos confidenciais de clientes (instituições financeiras)
+
+**O que é seguro compartilhar:**
+- Código de domínio sem dados reais
+- Schemas de banco (estrutura, não conteúdo)
+- Documentos públicos (resoluções, normativos)
+- Código com dados fictícios em testes
+
 ---
 
 ## 14. Segurança da aplicação
 
+Esta seção é particularmente crítica para a Arphia: os clientes são instituições financeiras reguladas pelo Banco Central, com obrigações legais sobre proteção de dados e cibersegurança. Falhas de segurança não são apenas problemas técnicos — geram exposição regulatória, perda de confiança e potencialmente exclusão do mercado.
+
+A abordagem de segurança aqui é **defesa em profundidade**: múltiplas camadas independentes de proteção, partindo do princípio de que qualquer camada individual pode falhar.
+
 SECURITY_DIAGRAM_PLACEHOLDER
 
-### 14.1 LGPD e dados de clientes
+### 14.1 Contexto regulatório
 
-DamaTools processa dados de instituições reguladas. Os requisitos mínimos são:
+Dois corpos regulatórios principais incidem sobre o DamaTools:
 
-- Dados de clientes são isolados por schema no banco
-- Nenhum dado de cliente é usado em staging ou desenvolvimento
-- Logs não contêm dados pessoais ou financeiros de clientes
-- Acesso ao banco de produção é auditado e restrito
+**LGPD (Lei Geral de Proteção de Dados Pessoais — Lei 13.709/2018):**
 
-### 14.2 Autenticação e autorização
+Toda informação pessoal de cidadãos brasileiros (CPF, e-mail, dados financeiros pessoais) está sob escopo da LGPD. As implicações concretas para o produto:
 
-- Autenticação via NextAuth.js com providers seguros
-- Sessões com JWT assinado + refresh token rotativo
-- RBAC: roles definidas por módulo (não globais)
-- Multi-tenancy: queries sempre filtradas por \`tenantId\`
+- Coleta de dados apenas com finalidade explícita
+- Direito do titular de acessar, corrigir e excluir seus dados
+- Notificação obrigatória de incidentes de segurança à ANPD
+- Designação de encarregado de dados (DPO) quando aplicável
+- Bases legais documentadas para cada tratamento (consentimento, execução de contrato, obrigação legal)
 
-### 14.3 OWASP Top 10 — controles implementados
+**Resoluções do Banco Central sobre cibersegurança:**
 
-| Risco | Controle |
+A Resolução CMN nº 4.893/2021 (e atualizações posteriores, incluindo a Resolução CMN nº 5.274) estabelece requisitos de política de cibersegurança para instituições financeiras. Embora a Arphia não seja uma IF, ao **prestar serviços a IFs** torna-se parte da cadeia de fornecedores que essas instituições precisam avaliar. Clientes farão due diligence de segurança antes de contratar — ter esta documentação robusta é tanto questão de segurança quanto de viabilidade comercial.
+
+### 14.2 Princípios norteadores
+
+Cinco princípios que devem orientar toda decisão de segurança no projeto:
+
+**Defesa em profundidade.** Nenhuma camada de segurança é confiável sozinha. Autenticação forte + autorização granular + criptografia + logs + monitoramento. Se uma falha, as outras seguram.
+
+**Princípio do menor privilégio.** Todo usuário, processo e serviço tem acesso ao mínimo necessário para sua função, e nada além. Dev em formação não tem acesso ao banco de produção. Aplicação não roda como root no servidor. Conexão de banco usa usuário com permissões limitadas, não superuser.
+
+**Negar por padrão.** Em qualquer decisão de acesso (rota protegida, ação em recurso, leitura de dado), a postura inicial é negar; permissão deve ser explicitamente concedida. Bug em código de autorização que falha tem que falhar para o lado seguro.
+
+**Falhar de forma segura.** Erros e exceções não devem vazar informação (stack traces em produção, mensagens detalhadas de erro de banco). Em situação de incerteza, a aplicação fecha as portas em vez de abri-las.
+
+**Segredos nunca no código.** Senhas, chaves de API, tokens, strings de conexão — tudo via variáveis de ambiente ou secrets manager. Commitar segredo no Git é incidente de segurança mesmo que o repositório seja privado.
+
+### 14.3 Autenticação e gestão de sessões
+
+**Hash de senhas:** \`argon2id\` (ou \`bcrypt\` com cost factor >= 12 como alternativa). Nunca armazenar senha em texto, nunca usar MD5 ou SHA-1. Biblioteca recomendada: \`argon2\` para Node.js.
+
+**Política de senha** (seguindo recomendações modernas do NIST SP 800-63B):
+- Mínimo de 12 caracteres
+- Sem exigência arbitrária de "1 maiúscula + 1 número + 1 especial" (causa senhas previsíveis)
+- Verificação contra lista de senhas comprometidas (HaveIBeenPwned API)
+- Sem expiração compulsória (forçar troca periódica gera senhas piores)
+
+**Cookies de sessão:**
+
+\`\`\`
+Set-Cookie: sessionId=...; HttpOnly; Secure; SameSite=Strict; Path=/
+\`\`\`
+
+- \`HttpOnly\`: impede acesso via JavaScript (mitiga XSS exfiltrando sessão)
+- \`Secure\`: cookie enviado apenas via HTTPS
+- \`SameSite=Strict\`: protege contra CSRF
+
+**MFA:** Recomendado desde o início para usuários com papel admin. TOTP via apps como Authy ou Google Authenticator. Para usuários comuns, MFA é opcional inicialmente, mas a infraestrutura deve estar pronta.
+
+**Proteção contra brute force:**
+- Rate limiting em endpoints de login (5 tentativas por 15 minutos por IP + por usuário)
+- Lock de conta após 10 tentativas falhas (com notificação por e-mail)
+- CAPTCHA após 3 tentativas falhas em sequência
+
+**Biblioteca recomendada:** Auth.js (NextAuth) — testada, ativamente mantida, integra bem com Next.js e Prisma.
+
+### 14.4 Autorização e controle de acesso
+
+Modelo baseado em **RBAC multi-tenant**, conforme definido em 6.6:
+
+\`\`\`
+Usuário → pertence a → Organização → tem acesso a → Módulos
+   ↑
+   tem Role na organização
+\`\`\`
+
+**Verificação em três camadas:**
+
+1. **Middleware de rota** (servidor) — bloqueia acesso a rotas sem permissão antes mesmo do handler executar
+2. **Lógica de aplicação** — cada operação verifica novamente (defesa em profundidade)
+3. **UI** — esconde botões/links de ações sem permissão (UX, não segurança real)
+
+**Prevenção de IDOR (Insecure Direct Object Reference):**
+
+Toda query que busca um recurso por ID deve incluir o owner ou organização na cláusula WHERE, nunca apenas o ID:
+
+\`\`\`typescript
+// ❌ Errado — usuário pode requisitar qualquer simulação
+const sim = await prisma.simulation.findUnique({ where: { id } });
+
+// ✅ Correto — só retorna se pertencer à organização do usuário
+const sim = await prisma.simulation.findFirst({
+  where: { id, organizationId: session.organizationId }
+});
+\`\`\`
+
+Esta regra é absoluta e deve estar no \`CLAUDE.md\`.
+
+### 14.5 Proteção de dados
+
+**Em trânsito (TLS):**
+- HTTPS obrigatório em todas as rotas, sem exceção
+- TLS 1.2 mínimo, preferência por 1.3
+- HSTS (\`Strict-Transport-Security\`) com \`max-age\` longo após estabilização
+- Certificados via Let's Encrypt com renovação automática (Certbot)
+- Redirecionamento automático de HTTP para HTTPS no nginx
+
+**Em repouso:**
+- PostgreSQL com encryption at rest no nível do disco (LUKS na VM ou padrão do DO Managed Database)
+- Backups criptografados antes de upload para Spaces (\`gpg\` ou \`openssl enc\`)
+
+**Em uso:**
+- Dados sensíveis não trafegam em logs (CPF, valores de transação)
+- Mascaramento em telas administrativas (CPF aparece como \`***.***.***-12\`)
+- APIs retornam apenas os campos necessários para a tela
+- Variáveis em memória de dados sensíveis são zeradas quando não usadas mais
+
+### 14.6 Mitigação contra OWASP Top 10
+
+| Ameaça | Mitigação aplicada |
 |---|---|
-| Injection | Prisma ORM (queries parametrizadas), Zod na entrada |
-| Broken Auth | NextAuth, JWT com expiração curta |
-| Sensitive Data Exposure | HTTPS obrigatório, dados em repouso criptografados |
-| Security Misconfiguration | Checklist de deploy, headers de segurança via Nginx |
-| XSS | React escapa por padrão, CSP via headers |
+| Broken Access Control | Verificação em três camadas (14.4); IDOR prevention obrigatório |
+| Cryptographic Failures | TLS 1.2+; argon2 para senhas; campos sensíveis criptografados |
+| Injection (SQL, etc.) | Prisma parametriza queries automaticamente; \`$queryRaw\` apenas com revisão obrigatória do tech lead |
+| Insecure Design | Arquitetura modular com fronteiras explícitas; threat modeling antes de features sensíveis |
+| Security Misconfiguration | Headers de segurança configurados (14.8); ambientes endurecidos; sem defaults perigosos |
+| Vulnerable Components | Dependabot ativo; \`npm audit\` no CI; revisão antes de novas dependências |
+| Auth Failures | Auth.js; MFA para admin; rate limiting; políticas modernas de senha |
+| Software & Data Integrity | Lockfiles versionados; CI verifica integridade; assinaturas em releases |
+| Logging & Monitoring Failures | Logs estruturados; Sentry; alertas de padrões suspeitos (14.10) |
+| SSRF | Validação de URLs em qualquer integração externa; whitelist de hosts |
 
-### 14.4 Resposta a incidentes
+### 14.7 Gestão de secrets e variáveis de ambiente
 
-1. **Detecção:** Sentry (erros) + Uptime Robot (disponibilidade)
-2. **Contenção:** feature flag ou rollback imediato
-3. **Comunicação:** cliente notificado em até 2h após confirmação
-4. **Post-mortem:** documentado no repositório em até 48h
+| Local | O quê | Acesso |
+|---|---|---|
+| \`.env.local\` | Credenciais de desenvolvimento local (banco local, chaves de sandbox) | Apenas na máquina do dev |
+| GitHub Actions Secrets | Credenciais para deploy (SSH, banco staging) | Apenas via CI/CD |
+| \`.env\` no servidor staging | Credenciais de \`arphia-db-dev\`, APIs externas (sandbox) | Servidor, leitura via PM2 |
+| \`.env\` no servidor produção | Credenciais de \`arphia-db-prod\`, APIs externas (prod) | Servidor, leitura via PM2, **acesso restrito ao tech lead** |
+
+**Regras:**
+- \`.env*\` no \`.gitignore\` (apenas \`.env.example\` versionado)
+- Pre-commit hook (\`husky\` + \`gitleaks\`) escaneia commits em busca de padrões de secrets
+- Rotação de credenciais a cada 6 meses ou em qualquer suspeita de comprometimento
+- Credenciais novas são providas via canal seguro (não Slack/email — gerenciador de senhas compartilhado)
+
+### 14.8 Headers de segurança
+
+Configurados no nginx (afetam todas as respostas):
+
+\`\`\`nginx
+add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;" always;
+\`\`\`
+
+Verificar periodicamente com Mozilla Observatory e Security Headers para validar score.
+
+### 14.9 Validação de entrada e sanitização
+
+**Validação em três camadas:**
+
+1. **TypeScript em tempo de compilação** — tipos protegem boa parte dos casos
+2. **Zod schemas em runtime** — toda entrada de API valida contra schema explícito
+3. **Constraints de banco** — última linha de defesa (NOT NULL, CHECK, UNIQUE)
+
+**Exemplo de uso de Zod:**
+
+\`\`\`typescript
+import { z } from "zod";
+
+const createSimulationSchema = z.object({
+  amount: z.number().positive().max(100_000_000),
+  installments: z.number().int().min(1).max(600),
+  interestRate: z.number().min(0).max(1000),
+  type: z.enum(["PRICE", "SAC", "SAA", "SAM"]),
+});
+
+const result = createSimulationSchema.safeParse(request.body);
+if (!result.success) {
+  return Response.json({ error: "Invalid input" }, { status: 400 });
+}
+\`\`\`
+
+Nunca confiar em validação de cliente. UI valida para UX, servidor valida para segurança.
+
+### 14.10 Auditoria e logs
+
+**Tabela \`shared.audit_log\`:** registra eventos sensíveis para fins regulatórios e investigativos.
+
+| Coluna | Conteúdo |
+|---|---|
+| \`user_id\` | Quem |
+| \`organization_id\` | Em qual organização |
+| \`action\` | O quê (ex: \`simulation.created\`, \`user.login\`, \`permission.changed\`) |
+| \`target_type\` / \`target_id\` | Recurso afetado |
+| \`metadata\` | JSON com contexto adicional (sem dados sensíveis) |
+| \`ip_address\` | De onde |
+| \`created_at\` | Quando |
+
+**Eventos que devem ser auditados:** login (sucesso e falha), mudança de senha ou MFA, mudança de permissão, geração de arquivos regulatórios (AMCC), exportação de dados em massa, acesso a relatórios financeiros, mudanças em configuração da organização.
+
+**Alertas automáticos (via Sentry/Slack):**
+- 5+ logins falhos em sequência para mesmo usuário
+- Login a partir de IP nunca usado antes
+- Acesso fora de horário comercial (configurável por organização)
+- Exportação de dados de volume incomum
+
+### 14.11 Backups e continuidade
+
+- **Criptografia antes de upload:** backups passam por \`gpg\` antes de irem para Spaces
+- **Teste mensal de restore:** uma vez por mês, restaurar backup em ambiente isolado e verificar integridade
+- **RPO (Recovery Point Objective):** máximo 24h de perda aceitável (backups diários)
+- **RTO (Recovery Time Objective):** máximo 4h para restaurar serviço em caso de incidente catastrófico
+- **Documento de DR:** procedimento passo a passo, mantido atualizado, para que qualquer membro do time consiga executar em emergência
+
+### 14.12 Dependências e supply chain
+
+- \`npm audit\` rodando no CI (falha o build em vulnerabilidades high/critical)
+- Dependabot configurado para PRs automáticos de updates de segurança
+- \`package-lock.json\` sempre commitado (reprodutibilidade)
+- Em produção, \`npm ci --omit=dev\` para garantir lockfile exato
+
+**Antes de adicionar nova dependência:** verificar manutenção ativa, número de mantenedores, vulnerabilidades conhecidas, tamanho do bundle e licença compatível com uso comercial.
+
+### 14.13 Cultura, treinamento e resposta a incidentes
+
+**PRs com impacto de segurança** recebem label \`security-impact\` e exigem checklist específico:
+- [ ] Autorização verificada em todas as queries
+- [ ] Entrada validada com Zod
+- [ ] Sem dados sensíveis em logs
+- [ ] Erros não vazam informação interna
+- [ ] Headers de segurança preservados
+
+**Plano de resposta a incidentes:**
+
+1. **Detecção** — quem percebeu, como, quando
+2. **Contenção** — ações imediatas (revogar credenciais, isolar VM, bloquear IP)
+3. **Erradicação** — remover a causa raiz
+4. **Recuperação** — restaurar operação normal
+5. **Comunicação** — quem informar (ANPD em até 72h se dados pessoais; clientes afetados; autoridades regulatórias se aplicável)
+6. **Lições aprendidas** — post-mortem sem culpa, ações para prevenir recorrência
+
+Pessoa de contato principal em incidentes: tech lead. Em ausência, sócio de negócio acionado.
 
 ---
 
@@ -2479,21 +3027,26 @@ DamaTools processa dados de instituições reguladas. Os requisitos mínimos sã
 
 ### 15.1 Checklist por Tier
 
-**Tier 1:**
-- [ ] Cálculo validado contra casos de borda documentados
-- [ ] Testes unitários cobrindo todas as ramificações de lógica
-- [ ] Revisão manual pelo tech lead linha a linha
-- [ ] Sem dependências de estado externo não mockado
+**Tier 1 — checklist rigoroso:**
+- [ ] Existem testes cobrindo o caso feliz
+- [ ] Existem testes cobrindo casos extremos (zeros, negativos, valores máximos)
+- [ ] Cálculo usa \`decimal.js\` (zero uso de float nativo)
+- [ ] Resultado bate com cálculo manual em pelo menos 2 exemplos
+- [ ] Validação de entrada cobre formatos inválidos
+- [ ] Logs não vazam dados sensíveis
+- [ ] Arquivo \`CLAUDE.md\` foi atualizado se regra nova foi introduzida
 
-**Tier 2:**
-- [ ] Happy path testado (unitário ou integração)
-- [ ] Tratamento de erros implementado
-- [ ] Sem SQL raw (apenas Prisma)
-- [ ] Types explícitos em todas as funções públicas
+**Tier 2 — checklist padrão:**
+- [ ] Existem testes para o fluxo principal
+- [ ] Tratamento de erro está presente (não só caminho feliz)
+- [ ] Estados de loading e erro são exibidos ao usuário
+- [ ] Não há dados sensíveis em logs ou URLs
+- [ ] Performance aceitável em datasets realistas
 
-**Tier 3:**
-- [ ] Lint e type check passando
-- [ ] Sem regressão visual (verificação manual)
+**Tier 3 — checklist leve:**
+- [ ] CodeRabbit aprovou
+- [ ] Build passou
+- [ ] Visual confere com o esperado (screenshots no PR se UI)
 
 ### 15.2 Testes obrigatórios por camada
 
@@ -2502,13 +3055,6 @@ DamaTools processa dados de instituições reguladas. Os requisitos mínimos sã
 | Domain (Tier 1) | Unitário | 100% das funções públicas |
 | Services (Tier 2) | Integração | Fluxos principais |
 | UI (Tier 3) | E2E (Playwright) | Happy path |
-
-### 15.3 Monitoramento em produção
-
-- **Sentry:** erros com stack trace e contexto de usuário
-- **Uptime Robot:** disponibilidade a cada 5 minutos
-- **Logs estruturados:** \`pino\` com correlação por \`requestId\`
-- **Alertas:** Slack \`#alertas\` para erros de produção e downtime
 
 ## 16. Monitoramento e observabilidade
 
@@ -2941,24 +3487,64 @@ O custo zero na fase inicial é viável porque as ferramentas escolhidas oferece
 
 ## 17. Roadmap de implantação
 
-### 17.1 Cronograma por fase
+ROADMAP_DIAGRAM_PLACEHOLDER
 
-| Mês | Tech Lead | Desenvolvedor | Entregas |
+Implantar todo o processo de uma vez é receita para nada funcionar. O roadmap abaixo escalona a complexidade de forma realista, ajustada ao período de formação do dev.
+
+### 17.1 Mês 1 — Fundação
+
+**Foco:** infraestrutura pronta, dev iniciando estudos.
+
+| Semana | Tech Lead | Dev | Sócio |
 |---|---|---|---|
-| 1 | Setup: infra, CI/CD, CLAUDE.md, padrões | Onboarding técnico, Fase 0 | Ambiente prod funcional |
-| 2 | Módulo AMCC (domínio + API) | Primeiros Tier 3 (UI do AMCC) | AMCC beta |
-| 3 | Calculadora (domínio) | UI da Calculadora (Tier 2) | Calculadora beta |
-| 4 | Revisão e hardening | Testes e documentação | AMCC + Calculadora v1 |
-| 5–6 | Início do módulo RAS | Autonomia em Tier 2 | RAS em desenvolvimento |
-| 7+ | Novos módulos conforme roadmap | Tier 2 pleno | Roadmap Fase 1 |
+| 1 | Cria GitHub Org, configura repo, branch protection | Inicia estudos (lógica de programação) | Define backlog inicial do produto |
+| 2 | Configura ambientes (local, staging), DNS, SSL | Continua estudos + Git básico | Valida requisitos com possíveis clientes |
+| 3 | Implementa primeiro módulo Tier 1 | Pratica HTML/CSS, lê código existente | Refina roadmap |
+| 4 | Configura CI/CD, Slack, integrações | Faz primeiro PR (tarefa Tier 3 simples) | Acompanha demos |
 
-### 17.2 Marcos de validação
+**Marcos do mês:**
+- Repositório com branch protection ativa
+- Ambientes staging e produção no ar
+- CLAUDE.md inicial escrito
+- Dev fez pelo menos 1 PR
 
-- **M1:** Deploy em produção com CI/CD funcionando
-- **M2:** Primeiro PR do dev mergeado em produção
-- **M3:** AMCC em uso por cliente piloto
-- **M4:** Calculadora em uso por cliente piloto
-- **M5:** Dev operando Tier 2 com autonomia
+### 17.2 Meses 2-3 — Estabilização
+
+**Foco:** processos rodando, dev começando a contribuir.
+
+- Cerimônias Scrumban acontecendo semanalmente
+- Tech lead em ritmo de Tier 1
+- Dev em ritmo de Tier 3 com 1h/dia de pair programming
+- CodeRabbit configurado e ativo
+- Primeiras features de produto em produção
+
+**Marcos:**
+- Mínimo de 3 PRs por semana do dev (todos Tier 3)
+- Zero bugs de Tier 1 em produção
+- Retrospectiva semanal acontecendo regularmente
+
+### 17.3 Meses 4-6 — Maturação
+
+**Foco:** dev migra para Tier 2, processo ganha consistência.
+
+- Dev começa Tier 2 com supervisão
+- Pair programming cai para 1x por semana
+- Métricas de processo começam a ser observadas
+- Primeiros clientes-piloto utilizando o produto
+
+**Marcos:**
+- Dev completou primeira tarefa Tier 2 em produção
+- Cobertura de testes em Tier 1 > 90%
+- SLA básico definido para o produto (ex: 99% uptime)
+
+### 17.4 A partir do mês 7 — Operação
+
+Processo estabilizado, equipe em ritmo. A partir daqui, avaliações trimestrais:
+
+- A equipe atual ainda atende a demanda? Precisa contratar?
+- Stack continua adequada?
+- Métricas de qualidade estão saudáveis?
+- Há clientes pagantes em volume suficiente?
 
 ---
 
@@ -3008,7 +3594,75 @@ O processo descrito neste documento é revisado na retrospectiva quinzenal. Muda
 [Passos para validar manualmente]
 \`\`\`
 
-### 19.2 Template de post-mortem
+### 19.2 CLAUDE.md exemplo
+
+Arquivo \`CLAUDE.md\` na raiz do projeto:
+
+\`\`\`markdown
+# Contexto do projeto — DamaTools (Arphia)
+
+## Sobre o produto
+DamaTools é a plataforma modular da Arphia para instituições financeiras
+reguladas pelo Banco Central do Brasil. Erros em cálculos ou interpretação
+regulatória geram prejuízo real ao cliente.
+
+## Stack
+- TypeScript + Next.js (App Router)
+- PostgreSQL com schemas por módulo
+- Tailwind CSS + Zod + Jest
+
+## ⚠️ Regras de domínio — OBRIGATÓRIO
+
+### Transversais a todos os módulos
+
+- SEMPRE \`decimal.js\`, NUNCA \`Number\` ou \`Math.round()\` para valores monetários
+- CPF: validar com algoritmo oficial (não regex apenas)
+- CNPJ: idem
+- Datas: sempre em UTC no banco, fuso local apenas na apresentação
+
+### Prevenção de IDOR (obrigatório)
+Toda query por ID deve incluir \`organizationId\` no WHERE:
+\`const sim = await prisma.simulation.findFirst({ where: { id, organizationId: session.organizationId } });\`
+
+### Em caso de dúvida sobre regra de negócio
+PARE e pergunte. Não infira regras financeiras ou regulatórias.
+
+## Proibições
+- Nunca logar CPF, CNPJ, valores de operações
+- Nunca expor stack trace em respostas de API em produção
+- Nunca commitar \`.env*\`
+\`\`\`
+
+### 19.3 Checklist de onboarding do dev
+
+**Semana 1:**
+- [ ] Acesso ao GitHub Org concedido
+- [ ] Acesso ao Slack e ao Claude Pro
+- [ ] Repositório clonado localmente
+- [ ] Ambiente local rodando
+- [ ] Primeiro commit feito (mesmo que trivial)
+- [ ] Leitura do \`CLAUDE.md\` completa
+- [ ] Trilha de estudo iniciada
+
+### 19.4 Trilha de estudos
+
+**Fase 0 (semanas 1-8):**
+1. Curso em Vídeo (Gustavo Guanabara) — Lógica de Programação
+2. Rocketseat Explorer — fundamentos web
+3. MDN Web Docs — HTML/CSS/JS
+4. OWASP Top 10 em vídeo gratuito (~4h) — módulo introdutório de segurança web
+
+**Fase 1 (semanas 9-16):**
+5. Documentação oficial do React
+6. Curso de Next.js (Rocketseat ou similar)
+7. Documentação do Prisma
+
+**Contínuo:**
+- Leitura de PRs do tech lead (ver código real do projeto)
+- Sessões de pair programming semanais
+- Documentação MDN para qualquer dúvida web
+
+### 19.5 Template de post-mortem
 
 \`\`\`markdown
 ## Incidente [DATA] — [TÍTULO BREVE]
@@ -3026,7 +3680,7 @@ O processo descrito neste documento é revisado na retrospectiva quinzenal. Muda
 - [ ] Ação 1 — responsável — prazo
 \`\`\`
 
-### 19.3 Checklist de deploy para produção
+### 19.6 Checklist de deploy para produção
 
 - [ ] CI verde na branch \`main\`
 - [ ] Migrations testadas em staging
@@ -3035,7 +3689,7 @@ O processo descrito neste documento é revisado na retrospectiva quinzenal. Muda
 - [ ] Monitoramento ativo (Sentry + Uptime Robot)
 - [ ] Comunicação para cliente (se mudança visível)
 
-### 19.4 Referências
+### 19.7 Referências
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
@@ -3111,6 +3765,8 @@ export default function App() {
     "SCRUMBAN_DIAGRAM_PLACEHOLDER",
     "SECURITY_DIAGRAM_PLACEHOLDER",
     "MONITORING_DIAGRAM_PLACEHOLDER",
+    "DEVFORMATION_DIAGRAM_PLACEHOLDER",
+    "ROADMAP_DIAGRAM_PLACEHOLDER",
   ] as const;
   type DiagramKey = typeof DIAGRAM_MARKERS[number];
 
@@ -3343,6 +3999,8 @@ export default function App() {
                   if (chunk === "SCRUMBAN_DIAGRAM_PLACEHOLDER") return <DiagramScrumban key={i} />;
                   if (chunk === "SECURITY_DIAGRAM_PLACEHOLDER")    return <DiagramSecurity    key={i} />;
                   if (chunk === "MONITORING_DIAGRAM_PLACEHOLDER") return <DiagramMonitoring key={i} />;
+                  if (chunk === "DEVFORMATION_DIAGRAM_PLACEHOLDER") return <DiagramDevFormation key={i} />;
+                  if (chunk === "ROADMAP_DIAGRAM_PLACEHOLDER")      return <DiagramRoadmap      key={i} />;
                   return chunk.trim()
                     ? <div key={i} className="dt-md" dangerouslySetInnerHTML={{ __html: chunk }} />
                     : null;
