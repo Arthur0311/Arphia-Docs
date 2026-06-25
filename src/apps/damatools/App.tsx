@@ -6,6 +6,8 @@ import React, {
   useMemo,
 } from "react";
 import { marked } from "marked";
+import { useAuth } from "../../shared/contexts/AuthContext";
+import LoginModal from "../../shared/components/auth/LoginModal";
 
 // ─── Color tokens (matches original design) ──────────────────────────────────
 const CSS = `
@@ -294,36 +296,48 @@ const SECTIONS_DATA = [
   },
   {
     num: "14",
+    title: "Spec Driven Development (SDD)",
+    icon: "check",
+    desc: "Especificação técnica antes do código: ciclo, templates de prompt e versionamento",
+  },
+  {
+    num: "15",
     title: "Segurança da aplicação",
     icon: "shield",
     desc: "LGPD, autenticação, OWASP Top 10, auditoria e resposta a incidentes",
   },
   {
-    num: "15",
+    num: "16",
     title: "Code Review e qualidade",
-    icon: "check",
+    icon: "layers",
     desc: "Checklists por Tier, testes obrigatórios e monitoramento em produção",
   },
   {
-    num: "16",
+    num: "17",
     title: "Monitoramento e observabilidade",
     icon: "monitor",
     desc: "Sentry, UptimeRobot, logs estruturados, alertas e resposta a incidentes",
   },
   {
-    num: "17",
+    num: "18",
     title: "Roadmap de implantação",
     icon: "calendar",
     desc: "Meses 1 a 7+: cronograma realista por papel e marcos de validação",
   },
   {
-    num: "18",
+    num: "19",
     title: "Indicadores de saúde do processo",
     icon: "bar",
     desc: "Métricas de qualidade, velocidade e saúde da equipe",
   },
   {
-    num: "19",
+    num: "20",
+    title: "Gestão de dependências",
+    icon: "code",
+    desc: "Categorias, versionamento semver, Dependabot, npm audit e Prisma",
+  },
+  {
+    num: "21",
     title: "Apêndices",
     icon: "file",
     desc: "Templates, checklists e referências complementares",
@@ -1998,12 +2012,14 @@ Versão 1.2 · Junho de 2026
 11. Processo de trabalho (Scrumban adaptado)
 12. Comunicação
 13. Uso da Inteligência Artificial
-14. Segurança da aplicação
-15. Code Review e qualidade
-16. Monitoramento e observabilidade
-17. Roadmap de implantação
-18. Indicadores de saúde do processo
-19. Apêndices
+14. Spec Driven Development (SDD)
+15. Segurança da aplicação
+16. Code Review e qualidade
+17. Monitoramento e observabilidade
+18. Roadmap de implantação
+19. Indicadores de saúde do processo
+20. Gestão de dependências
+21. Apêndices
 
 ---
 
@@ -2769,7 +2785,347 @@ Todo código gerado por IA que vai para produção passa pela mesma pipeline de 
 
 ---
 
-## 14. Segurança da aplicação
+## 14. Spec Driven Development (SDD)
+
+Spec Driven Development (SDD) é a prática de produzir uma especificação técnica formal antes de qualquer linha de código ser escrita. A especificação — documento estruturado que define comportamento esperado, entradas, saídas, regras de domínio e critérios de aceite verificáveis — serve simultaneamente como instrução ao desenvolvedor, contrato com o Product Owner e referência de verificação após a implementação.
+
+No contexto da Arphia, o SDD responde a dois riscos concretos: execução de tarefas em domínio financeiro regulado por um desenvolvedor em formação (onde especificação ambígua produz código tecnicamente compilável e financeiramente incorreto), e dependência de IA generativa para escrita de código (modelos geram código de maior qualidade quando recebem especificações precisas).
+
+### 14.1 Conceito e objetivo
+
+A especificação tem três funções simultâneas:
+
+- **Instrução:** define o que o desenvolvedor deve implementar, sem margem para interpretação
+- **Contrato:** registra o acordo entre PO e time técnico sobre o que será entregue
+- **Verificação:** serve de referência objetiva para o code review e os testes automatizados
+
+### 14.2 Quando aplicar o SDD
+
+A obrigatoriedade de spec é determinada pelo Tier da tarefa (Seção 4):
+
+| Tier | Spec obrigatória? | Profundidade mínima |
+|---|---|---|
+| Tier 1 | Sim, obrigatória | Spec completa: regras de domínio exaustivas, casos extremos e critérios de aceite testáveis |
+| Tier 2 | Sim, obrigatória | Spec padrão: entradas, saídas, comportamento e critérios de aceite |
+| Tier 3 | Recomendada | Spec simplificada ou apenas critério de aceite descrito no card do board |
+
+A spec deve estar com status \`Aprovada\` pelo tech lead antes da criação do branch de desenvolvimento. Submeter Pull Request sem spec aprovada para tarefas Tier 1 ou Tier 2 constitui motivo de recusa imediata.
+
+### 14.3 O ciclo SDD no processo
+
+O SDD se insere entre o planejamento (Seção 11) e o início do desenvolvimento (Seção 9):
+
+\`\`\`
+Backlog
+  ↓
+Planejamento semanal (priorização pelo PO)
+  ↓
+[SPEC EM ANDAMENTO]  ← tech lead ou dev produz com apoio de IA
+  ↓
+[SPEC EM REVISÃO]    ← tech lead valida regras de domínio
+  ↓
+[SPEC APROVADA]
+  ↓
+Abertura do branch (feature/*, fix/*, etc.)
+  ↓
+Implementação guiada pela spec
+  ↓
+Verificação contra a spec (antes de abrir PR)
+  ↓
+Pull Request → Code Review → Deploy
+\`\`\`
+
+**Responsabilidade por Tier:**
+
+| Tier | Quem produz a spec | Quem revisa |
+|---|---|---|
+| Tier 1 | Tech lead, com auxílio de IA | Tech lead (auto-revisão rigorosa) |
+| Tier 2 | Dev produz rascunho com IA; tech lead revisa | Tech lead |
+| Tier 3 | Dev produz spec simplificada | Tech lead (revisão leve) |
+
+**Armazenamento:** specs são documentos Markdown versionados no repositório, em \`docs/specs/[modulo]/[nome-da-spec].md\`. O link para a spec é incluído obrigatoriamente na descrição do PR.
+
+### 14.4 Estrutura padrão de uma especificação
+
+Toda spec do DamaTools segue a estrutura abaixo. Campos marcados com \`*\` são obrigatórios para Tier 1 e Tier 2.
+
+\`\`\`markdown
+# SPEC: [Título descritivo da funcionalidade]
+
+## Metadados
+- **Módulo:** [nome do módulo — calculator, amcc, ras, etc.]
+- **Tier:** [1 / 2 / 3]
+- **Status:** [Rascunho | Em revisão | Aprovada | Implementada]
+- **Autor:** [quem redigiu]
+- **Revisor:** [tech lead]
+- **Data:** [yyyy-mm-dd]
+- **Issue:** [link para o card no GitHub Projects]
+
+## Objetivo *
+[Uma frase: o sistema deve [ação] para que [usuário] possa [objetivo de negócio]]
+
+## Contexto *
+[Por que esta funcionalidade existe. Qual problema resolve para a IF.
+Referências normativas quando aplicável.]
+
+## Escopo *
+### Inclui
+- [Comportamentos cobertos por esta spec]
+
+### Exclui (fora de escopo)
+- [O que explicitamente não faz parte desta entrega]
+
+## Regras de domínio *
+[Seção crítica para Tier 1. Cada regra financeira ou regulatória
+listada com fórmula, exceções e casos extremos quando aplicável.]
+
+## Entradas *
+| Campo | Tipo | Obrigatório | Validação | Exemplo |
+
+## Saídas *
+| Campo | Tipo | Formato | Exemplo |
+
+## Comportamento esperado *
+[Cenários no formato: "Dado X, quando Y, então Z"]
+
+## Casos extremos *
+[Limites e situações degeneradas que precisam de tratamento explícito]
+
+## Critérios de aceite *
+- [ ] [Condição testável verificável por teste automatizado]
+
+## Dependências
+[Módulos, APIs externas, tabelas do banco envolvidas]
+
+## Considerações de segurança
+[Validações de entrada, dados sensíveis, regras de autorização]
+
+## Notas de implementação
+[Orientações técnicas específicas — sem prescrever a solução]
+\`\`\`
+
+### 14.5 Templates de prompt padronizados
+
+O processo SDD usa 5 prompts oficiais. Devem ser copiados integralmente e preenchidos nos campos indicados antes de cada execução.
+
+**Prompt 1 — Discovery**
+
+Quando usar: ao receber um requisito ainda informal do PO, antes de redigir a spec. Objetivo: estruturar o requisito bruto, identificar ambiguidades e mapear regras de domínio implícitas.
+
+Retorna: reformulação objetiva, ambiguidades identificadas, regras de domínio implícitas, escopo sugerido e perguntas para o PO (máximo 5, em ordem de prioridade).
+
+---
+
+**Prompt 2 — Geração de spec Tier 1**
+
+Quando usar: após ambiguidades do Prompt 1 resolvidas, para tarefas que envolvem cálculos financeiros, regras regulatórias ou geração de arquivos para o BCB. Gera spec completa seguindo o template padrão DamaTools, com ênfase em: regras de domínio exaustivas com fórmulas, cenários Gherkin (Dado/Quando/Então), critérios de aceite com ao menos um caso numérico concreto calculado manualmente.
+
+---
+
+**Prompt 3 — Geração de spec Tier 2**
+
+Quando usar: para tarefas de lógica de negócio padrão — telas, formulários, integrações de API, fluxos de navegação. Ênfase em: entradas e validações, comportamento de UI (estados vazios/loading/erro/sucesso), regras de autorização por role e operações no banco.
+
+Onde houver dúvida sobre uma regra de negócio, sinaliza com: \`> ⚠️ VERIFICAR COM TECH LEAD: [descrever a dúvida]\`
+
+---
+
+**Prompt 4 — Plano de implementação**
+
+Quando usar: após a spec estar aprovada, para decompô-la em tasks sequenciais executáveis pelo desenvolvedor em formação.
+
+Regras de geração: tasks sequenciais (cada uma tem a anterior como pré-requisito), granularidade máxima de 2h por task, instrução clara (dev não deduz o que fazer), teste junto com a task (nunca depois), pontos de revisão obrigatórios após tasks de lógica de domínio ou autorização.
+
+Formato de cada task:
+\`\`\`
+### Task N — [título objetivo]
+- **O que fazer:** [instrução direta — verbo no imperativo]
+- **Onde:** [caminho exato do arquivo]
+- **Como verificar:** [critério objetivo de conclusão]
+- **Teste a escrever:** [o que o teste deve verificar]
+- **⚠️ Ponto de revisão do tech lead:** Sim / Não
+\`\`\`
+
+Sinalização de risco: 🔴 lógica financeira (Tier 1) · 🟡 autorização/banco/integração · 🟢 UI/estrutura/scaffolding
+
+**Task Final obrigatória** em todo plano: atualizar \`CONTEXT.md\` do módulo movendo o item de "Backlog" para "Funcionalidades implementadas" e registrando novos tipos e funções exportados.
+
+---
+
+**Prompt 5 — Verificação pré-PR**
+
+Quando usar: com a implementação concluída, antes de abrir o Pull Request. Quem executa: o próprio desenvolvedor, como auto-verificação obrigatória.
+
+Retorna seis seções: cobertura de critérios de aceite (✅/⚠️/❌ por item), conformidade com regras de domínio, cobertura de casos extremos, violações de padrão DamaTools (float nativo, dados sensíveis em logs, ausência de Zod, query sem organizationId, secret em código), qualidade dos testes, veredicto (PRONTO PARA PR ou BLOQUEADO).
+
+### 14.6 Exemplo prático — SAC no módulo Calculadora
+
+**Requisito original do PO:** "Precisamos que o usuário consiga simular um financiamento pelo SAC, com o valor das parcelas diminuindo ao longo do tempo."
+
+**Etapa 1 — Discovery (Prompt 1):** Tech lead executa e obtém a reformulação objetiva, as ambiguidades (taxa nominal ou efetiva? IOF incluso? Carência?) e as regras implícitas: \`A = PV ÷ n\`, \`J_k = SD_{k-1} × i\`, \`PMT_k = A + J_k\`, arredondamento ABNT NBR 5891.
+
+**Etapa 2 — Spec aprovada (Prompt 2):** Spec gerada com Tier 1, referência Circular BCB 3.957/2019. Regras de domínio chave: amortização constante \`A = PV ÷ n\`; saldo devedor \`SD_k = PV - (k × A)\`; juros \`J_k = SD_{k-1} × i\`; arredondamento somente no resultado final (decimal.js, nunca float nativo); última parcela absorve diferenças acumuladas. Critério de aceite: PV=120.000, n=12, i=1% → parcela[1]=11.200,00; parcela[12]=10.100,00; SUM(amortizacao)=120.000,00 exatamente.
+
+**Etapa 3 — Plano (Prompt 4):** 5 tasks geradas: 🟢 criar estrutura de arquivos, 🔴 implementar calculateSAC() (ponto de revisão obrigatório), 🟡 criar schema Prisma e migration (ponto de revisão), 🟡 criar API route POST /api/calculator/sac, 🟢 criar componente SACResultTable + Task Final de atualizar CONTEXT.md.
+
+**Etapa 4 — Implementação:** Dev executa tasks em sequência, parando nos pontos de revisão antes de continuar.
+
+**Etapa 5 — Verificação (Prompt 5):** Antes de abrir o PR, dev executa o Prompt 5 com spec e código. Qualquer item ❌ ou ⚠️ é corrigido antes da submissão. Link para \`docs/specs/calculator/sac-amortizacao.md\` incluído na descrição do PR.
+
+### 14.7 Armazenamento e versionamento
+
+O repositório mantém dois tipos distintos de artefatos do SDD:
+
+**Specs** são permanentes e imutáveis após aprovação. Documentam *o que* foi construído.
+
+**Planos de implementação** são efêmeros. Documentam *como* construir; ficam obsoletos após o merge e não precisam ser mantidos indefinidamente.
+
+\`\`\`
+docs/
+├── specs/                          ← permanente; imutável após aprovação
+│   ├── _template.md                ← template em branco para copiar
+│   ├── calculator/
+│   │   ├── CONTEXT.md              ← contexto do módulo para agentes de IA
+│   │   ├── sac-amortizacao.md
+│   │   └── price-amortizacao.md
+│   ├── amcc/
+│   │   ├── CONTEXT.md
+│   │   └── xml-generation.md
+│   └── ras/
+│       ├── CONTEXT.md
+│       └── indicadores-dashboard.md
+└── plans/                          ← efêmero; arquivado após merge do PR
+    ├── calculator/
+    │   └── sac-amortizacao.md
+    └── amcc/
+\`\`\`
+
+| Artefato | Localização | Criado quando | Ciclo de vida |
+|---|---|---|---|
+| Spec | \`docs/specs/[modulo]/[nome].md\` | Antes do branch | Permanente; imutável após aprovação |
+| Plano | \`docs/plans/[modulo]/[nome].md\` | Após spec aprovada | Arquivado após merge do PR |
+| CONTEXT.md | \`docs/specs/[modulo]/CONTEXT.md\` | Na primeira spec do módulo | Atualizado a cada nova spec |
+
+Mudanças de requisito durante a implementação resultam em nova spec ou adendo versionado — nunca na edição do documento original aprovado.
+
+### 14.8 Critérios de aprovação de uma spec
+
+O tech lead aprova uma spec quando todos os critérios abaixo são atendidos:
+
+- **Objetivo testável:** cada critério de aceite pode ser verificado por teste automatizado sem interpretação subjetiva
+- **Regras de domínio completas:** nenhuma regra financeira foi deixada implícita; o desenvolvedor não precisa consultar fontes externas
+- **Casos extremos mapeados:** os limites do sistema estão definidos explicitamente
+- **Escopo delimitado:** o que não está descrito na spec não entra no PR — a spec é o contrato
+- **Sem ambiguidade executável:** o desenvolvedor em formação consegue implementar sem precisar interpretar o que fazer em qualquer situação coberta
+
+Specs reprovadas retornam ao autor com comentários objetivos por seção. O desenvolvimento não se inicia enquanto o status não estiver em \`Aprovada\`.
+
+### 14.9 Integração com o board Scrumban
+
+No GitHub Projects, o ciclo de uma tarefa com SDD segue a progressão:
+
+\`\`\`
+Backlog
+  → A fazer
+      → Em progresso [label: spec:em-andamento]
+      → Em progresso [label: spec:em-revisão]
+      → Em progresso [label: spec:aprovada]  ← branch aberto aqui
+  → Em review (PR aberto)
+  → Concluído
+\`\`\`
+
+A label \`spec:aprovada\` no card sinaliza para toda a equipe que o desenvolvimento pode ser iniciado. PRs de tarefas Tier 1 ou Tier 2 sem essa label são recusados na revisão.
+
+### 14.10 Arquivo CONTEXT.md por módulo
+
+O \`CONTEXT.md\` é um arquivo de referência rápida mantido na pasta de specs de cada módulo. Seu propósito principal é fornecer ao agente de IA o estado atual do módulo antes da geração de novas specs ou planos — sem ele, o agente desconhece o que já foi construído e gera artefatos redundantes ou contraditórios.
+
+\`\`\`markdown
+# Contexto do módulo — [Nome do Módulo]
+
+## Propósito
+[Uma ou duas frases: o que este módulo resolve para a IF]
+
+## Funcionalidades implementadas
+| Spec | Status | Descrição |
+| [sac-amortizacao.md](sac-amortizacao.md) | Implementada | Cronograma SAC completo |
+
+## Interfaces públicas (index.ts)
+[Funções e tipos exportados — atualizar a cada spec implementada]
+
+## Regras de domínio transversais ao módulo
+[Regras que se aplicam a todas as specs]
+
+## Padrões de código estabelecidos
+- [Ex: funções de domain/ são puras, sem efeitos colaterais]
+
+## Dependências externas consumidas
+[APIs, tabelas de banco, módulos shared utilizados]
+
+## Backlog do módulo (não iniciadas)
+[Specs planejadas mas ainda não escritas — evita duplicação]
+\`\`\`
+
+**Manutenção:** o tech lead atualiza o \`CONTEXT.md\` ao aprovar cada nova spec. A seção "Funcionalidades implementadas" cresce incrementalmente, tornando-se um índice vivo de tudo que o módulo entrega.
+
+### 14.11 Contexto obrigatório para agentes de IA
+
+A qualidade da spec ou plano gerado é diretamente proporcional à profundidade do contexto fornecido.
+
+| Sem este contexto | Risco concreto |
+|---|---|
+| \`CLAUDE.md\` | Agente usa \`Number\` em vez de \`decimal.js\`; loga dados sensíveis; ignora padrões de commit e arquitetura |
+| \`CONTEXT.md\` do módulo | Agente reimplementa função já existente; gera spec para algo já implementado |
+| Código \`domain/\` do módulo | Agente propõe estrutura divergente; desconhece tipos já definidos |
+| Specs existentes do módulo | Agente cria spec que contradiz comportamento já especificado |
+
+**Hierarquia de contexto por Tier:**
+
+| Arquivo de contexto | Tier 1 | Tier 2 | Tier 3 |
+|---|---|---|---|
+| \`CLAUDE.md\` | Obrigatório | Obrigatório | Recomendado |
+| \`docs/specs/[modulo]/CONTEXT.md\` | Obrigatório | Obrigatório | Recomendado |
+| \`src/modules/[modulo]/domain/\` | Obrigatório | Recomendado | Não necessário |
+| \`src/modules/[modulo]/index.ts\` | Recomendado | Recomendado | Não necessário |
+| Specs existentes do módulo | Recomendado | Opcional | Não necessário |
+
+**No Cursor (via \`@\`):**
+\`\`\`
+@CLAUDE.md
+@docs/specs/calculator/CONTEXT.md
+@src/modules/calculator/domain/
+[Prompt de spec preenchido]
+\`\`\`
+
+**No Claude Code (CLI):**
+\`\`\`bash
+claude \\
+  --context CLAUDE.md \\
+  --context docs/specs/calculator/CONTEXT.md \\
+  --context src/modules/calculator/domain/ \\
+  "$(cat docs/plans/prompts/sdd-spec-tier1.md)"
+\`\`\`
+
+### 14.12 Atualização do CONTEXT.md pelo agente de IA
+
+O agente que executa o plano de implementação é o artefato com maior contexto sobre o que foi construído: conhece a spec que seguiu, o código que escreveu, os tipos que exportou e os padrões que aplicou. Atribuir a ele a responsabilidade de atualizar o \`CONTEXT.md\` ao final da execução é mais preciso do que depender de o tech lead lembrar de fazê-lo manualmente.
+
+Essa atualização está codificada como **Task Final obrigatória** em todo plano gerado pelo Prompt 4. Ela faz parte do PR como qualquer outro arquivo modificado, e o diff é revisado pelo tech lead no code review.
+
+| Seção do CONTEXT.md | Ação |
+|---|---|
+| Funcionalidades implementadas | Mover o item de "Backlog" para esta seção com status \`Implementada\` |
+| Interfaces públicas (index.ts) | Adicionar os novos tipos e funções exportados |
+| Padrões de código estabelecidos | Registrar apenas padrões genuinamente novos |
+| Backlog do módulo | Remover o item recém-implementado |
+
+**O que o agente não deve fazer:** alterar ou remover registros de specs anteriores, reescrever o propósito do módulo, adicionar informações sobre outras specs além da que acabou de implementar.
+
+A cada spec implementada, o \`CONTEXT.md\` cresce com uma entrada precisa, validada pelo agente e revisada pelo tech lead. Após seis meses de desenvolvimento, o arquivo contém um índice fiel de tudo que o módulo entrega — sem esforço de manutenção adicional além do que já está incorporado ao fluxo de code review.
+
+---
+
+## 15. Segurança da aplicação
 
 Esta seção é particularmente crítica para a Arphia: os clientes são instituições financeiras reguladas pelo Banco Central, com obrigações legais sobre proteção de dados e cibersegurança. Falhas de segurança não são apenas problemas técnicos — geram exposição regulatória, perda de confiança e potencialmente exclusão do mercado.
 
@@ -3023,7 +3379,7 @@ Pessoa de contato principal em incidentes: tech lead. Em ausência, sócio de ne
 
 ---
 
-## 15. Code Review e qualidade
+## 16. Code Review e qualidade
 
 ### 15.1 Checklist por Tier
 
@@ -3056,7 +3412,7 @@ Pessoa de contato principal em incidentes: tech lead. Em ausência, sócio de ne
 | Services (Tier 2) | Integração | Fluxos principais |
 | UI (Tier 3) | E2E (Playwright) | Happy path |
 
-## 16. Monitoramento e observabilidade
+## 17. Monitoramento e observabilidade
 
 ### 16.1 Objetivo e escopo
 
@@ -3485,7 +3841,7 @@ O custo zero na fase inicial é viável porque as ferramentas escolhidas oferece
 
 ---
 
-## 17. Roadmap de implantação
+## 18. Roadmap de implantação
 
 ROADMAP_DIAGRAM_PLACEHOLDER
 
@@ -3548,7 +3904,7 @@ Processo estabilizado, equipe em ritmo. A partir daqui, avaliações trimestrais
 
 ---
 
-## 18. Indicadores de saúde do processo
+## 19. Indicadores de saúde do processo
 
 ### 18.1 Métricas de qualidade
 
@@ -3573,7 +3929,218 @@ O processo descrito neste documento é revisado na retrospectiva quinzenal. Muda
 
 ---
 
-## 19. Apêndices
+## 20. Gestão de dependências
+
+Toda dependência do projeto é classificada em uma das três categorias abaixo. A classificação determina o rigor na avaliação inicial, a estratégia de versionamento e a prioridade de atualização em caso de vulnerabilidade.
+
+### 20.1 Categorias de dependência
+
+| Categoria | Exemplos no DamaTools | Critério de classificação |
+|---|---|---|
+| **Crítica de domínio** | \`decimal.js\`, \`prisma\`, \`@prisma/client\`, \`zod\` | Falha ou comportamento incorreto impacta diretamente a correção dos cálculos financeiros ou a integridade dos dados |
+| **Infraestrutura** | \`next\`, \`react\`, \`tailwindcss\`, \`pino\`, \`argon2\` | Sustentam a aplicação mas não determinam o resultado de operações financeiras |
+| **Desenvolvimento** | \`typescript\`, \`eslint\`, \`jest\`, \`@testing-library/*\` | Presentes apenas no ambiente de desenvolvimento; não chegam ao bundle de produção |
+
+### 20.2 Avaliação antes de adicionar uma dependência
+
+A primeira pergunta é sempre: **a funcionalidade pode ser implementada internamente sem a dependência?** Para lógicas simples (formatação de data, truncamento de string, cálculo pontual), implementar internamente é preferível a introduzir um pacote externo.
+
+Quando a dependência for necessária, aplicar o seguinte checklist antes de instalar:
+
+\`\`\`
+□ Última publicação no npm: há menos de 12 meses?
+□ Issues abertas sem resposta do mantenedor: ausentes ou poucas?
+□ npm audit não reporta vulnerabilidades conhecidas?
+□ Licença compatível com uso comercial: MIT, Apache-2.0 ou ISC?
+□ Governança: mantida por organização (não por único contribuidor)?
+□ Para deps de frontend: bundle size aceitável (< 20 kB gzip para utils)?
+□ Para deps críticas de domínio: aprovação explícita do tech lead?
+\`\`\`
+
+Qualquer item reprovado deve ser discutido com o tech lead antes de prosseguir. Dependências que envolvam parsing de dados financeiros, geração de arquivos regulatórios ou criptografia exigem aprovação do tech lead independentemente do resultado do checklist.
+
+### 20.3 Semver e estratégia de versionamento
+
+\`\`\`jsonc
+{
+  "dependencies": {
+    // Críticas de domínio — pin versão exata
+    // Motivo: atualização não planejada não deve alterar
+    // comportamento de cálculo ou schema de banco silenciosamente
+    "decimal.js": "10.4.3",
+    "prisma": "5.10.2",
+    "@prisma/client": "5.10.2",  // sempre igual à versão do prisma
+
+    // Infraestrutura — range minor compatível
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "pino": "^9.1.0",
+
+    // zod — exceção: pin exato apesar de ser "infraestrutura"
+    // Motivo: mudanças em tipos de validação podem quebrar
+    // schemas de spec silenciosamente
+    "zod": "3.22.4"
+  },
+  "devDependencies": {
+    // Dev — range minor é suficiente
+    "typescript": "^5.4.0",
+    "jest": "^29.7.0"
+  }
+}
+\`\`\`
+
+\`^MAJOR.MINOR.PATCH\` aceita atualizações de minor e patch, nunca de major. Pin exato (sem prefixo) não permite nenhuma atualização automática.
+
+### 20.4 Lock file — package-lock.json
+
+O \`package-lock.json\` registra a versão exata de cada pacote instalado, incluindo dependências transitivas. Garante que \`npm ci\` instale exatamente os mesmos pacotes em todas as máquinas e no CI.
+
+**Regras:**
+- O \`package-lock.json\` é sempre commitado no repositório. Nunca adicionado ao \`.gitignore\`.
+- \`npm ci\` (usado no CI) instala a partir do lock file sem modificá-lo. \`npm install\` (usado localmente) pode atualizá-lo.
+- Em conflitos de lock file durante merge:
+
+\`\`\`bash
+# 1. Aceitar a versão do branch de destino como base
+git checkout develop -- package-lock.json
+
+# 2. Reinstalar respeitando o package.json resultante do merge
+npm install
+
+# 3. Commitar o lock file atualizado
+git add package-lock.json
+git commit -m "chore: resolve package-lock conflict"
+\`\`\`
+
+### 20.5 Workflow do Dependabot
+
+O Dependabot verifica automaticamente dependências desatualizadas e abre PRs com as atualizações.
+
+| Tipo | Exemplo | Ação |
+|---|---|---|
+| **Patch** (\`x.y.3\` → \`x.y.4\`) | Correção de bug | Mergear após CI verde, sem revisão manual |
+| **Minor** (\`x.2.z\` → \`x.3.z\`) | Feature retrocompatível | Mergear após CI verde; inspecionar changelog para deps críticas |
+| **Major** (\`1.x.z\` → \`2.x.z\`) | Possíveis breaking changes | Revisão manual obrigatória; testar localmente; um major por vez |
+| **Security** (qualquer nível) | Vulnerabilidade conhecida | Tratar como hotfix — prioridade sobre features em andamento |
+
+\`\`\`yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+    ignore:
+      # Atualizações major de deps críticas só via revisão manual
+      - dependency-name: "decimal.js"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+\`\`\`
+
+### 20.6 npm audit — pipeline de segurança
+
+O \`npm audit\` compara as dependências instaladas contra o banco de vulnerabilidades do npm por nível de severidade: \`info\`, \`low\`, \`moderate\`, \`high\` e \`critical\`.
+
+**No CI (step obrigatório antes do build):**
+\`\`\`yaml
+- name: Verificar vulnerabilidades
+  run: npm audit --audit-level=high
+  # Falha o build se houver vulnerabilidades high ou critical
+  # Moderate e abaixo não bloqueiam — tratadas no ciclo semanal
+\`\`\`
+
+**Localmente (rodar antes de abrir PR):**
+\`\`\`bash
+npm audit                          # relatório completo
+npm audit --audit-level=moderate   # filtrar moderate+
+npm audit fix                      # aplica correções automáticas seguras
+\`\`\`
+
+\`npm audit fix --force\` aplica correções que podem introduzir breaking changes — usar somente com conhecimento do impacto e nunca em deps críticas de domínio sem revisão do tech lead.
+
+Quando o audit fix automático não resolve (vulnerabilidade em dependência transitiva sem versão corrigida), usar \`overrides\` no \`package.json\`. Todo \`override\` deve ser documentado no PR com: qual vulnerabilidade resolve, por que o fix automático não funcionou e quando pode ser removido.
+
+### 20.7 Processo de resposta a vulnerabilidades
+
+| Severidade | Prazo | Tratamento |
+|---|---|---|
+| **Critical** | < 4 horas | Hotfix — fluxo \`hotfix/*\` da Seção 9 |
+| **High** | < 24 horas | Hotfix ou PR urgente no develop |
+| **Moderate** | Próximo ciclo semanal | PR normal com label \`security\` |
+| **Low / Info** | Próxima janela de manutenção | Agrupa com atualizações regulares |
+
+O canal \`#alertas-producao\` no Slack recebe notificações automáticas de vulnerabilidades high e critical via integração GitHub → canal (configurada no Dependabot ou GitHub Security Advisories).
+
+### 20.8 Prisma — gestão específica
+
+O Prisma tem ciclo de gestão próprio por ser responsável pelas migrations do banco de dados.
+
+**Regra de versão:** \`prisma\` e \`@prisma/client\` devem sempre ter a mesma versão exata. Um mismatch causa erros em runtime.
+
+**Após qualquer mudança no \`schema.prisma\`:**
+\`\`\`bash
+npx prisma generate        # regenera o client TypeScript
+npx prisma migrate dev     # cria e aplica migration no banco de dev
+\`\`\`
+
+**No CI:**
+\`\`\`yaml
+- name: Gerar Prisma Client
+  run: npx prisma generate
+
+- name: Verificar migrations pendentes
+  run: npx prisma migrate status
+  # Falha se houver migration não aplicada no banco de CI
+\`\`\`
+
+Atualizações major do Prisma podem requerer alterações no \`schema.prisma\` e nos arquivos de migration. Executar a atualização em branch isolada, com revisão das release notes antes de qualquer migração em staging.
+
+### 20.9 Dependências internas entre módulos
+
+No monolito modular do DamaTools, as dependências internas (imports entre arquivos do próprio projeto) seguem regras tão estritas quanto as dependências externas — verificadas via ESLint.
+
+\`\`\`
+Permitido:
+  módulo → /shared              ✓  (qualquer módulo pode importar de shared)
+  /shared → /shared             ✓  (com atenção a circularidades)
+
+Proibido:
+  módulo A → módulo B           ✗  (viola isolamento do módulo)
+  /shared → qualquer módulo     ✗  (inverte a hierarquia)
+  import fora da index.ts       ✗  (viola a interface pública do módulo)
+\`\`\`
+
+Configuração via \`eslint-plugin-boundaries\`: cada módulo tem apenas acesso a \`shared\`. Qualquer import cruzando uma fronteira proibida gera erro de lint e bloqueia o PR no CI.
+
+Detecção de dependências circulares em \`/shared\`: \`npx madge --circular src/shared/\`. Adicionar como step no CI — falha se encontrar circularidade.
+
+### 20.10 Referência rápida
+
+| Situação | Ação |
+|---|---|
+| Quer instalar dependência nova | Executar checklist da Seção 20.2 antes |
+| Dep crítica de domínio | Approval do tech lead obrigatória |
+| Dependabot abre PR de patch/minor | Mergear após CI verde |
+| Dependabot abre PR de major | Revisar changelog, testar localmente, um major por vez |
+| \`npm audit\` reporta critical/high | Tratar como hotfix — fluxo \`hotfix/*\` |
+| Conflito no package-lock.json | \`git checkout develop -- package-lock.json && npm install\` |
+| Mudança no schema.prisma | \`npx prisma generate && npx prisma migrate dev\` |
+| Import de módulo A para módulo B | Não é permitido — mover para \`/shared\` ou usar evento de domínio |
+| Circularidade em /shared detectada | Refatorar imediatamente — não mergear com circularidade |
+
+---
+
+## 21. Apêndices
 
 ### 19.1 Template de PR
 
@@ -3746,12 +4313,15 @@ function extractSections(md: string): SectionEntry[] {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
+  const { user, loading: authLoading, signOut } = useAuth();
   const [dark, setDark] = useState(false);
   const [view, setView] = useState<"landing" | "doc">(
     "landing",
   );
   const [activeSec, setActiveSec] = useState<string>("1");
   const [activeToc, setActiveToc] = useState<string>("");
+  const [showLogin, setShowLogin] = useState(false);
+  const [pendingSection, setPendingSection] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const md = buildMarkdown();
   const sections = extractSections(md);
@@ -3852,7 +4422,7 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [view]);
 
-  const goToSection = useCallback((num: string) => {
+  const navigateToSection = useCallback((num: string) => {
     setView("doc");
     setActiveSec(num);
     requestAnimationFrame(() => {
@@ -3866,6 +4436,15 @@ export default function App() {
       }, 100);
     });
   }, []);
+
+  const goToSection = useCallback((num: string) => {
+    if (!user) {
+      setPendingSection(num);
+      setShowLogin(true);
+      return;
+    }
+    navigateToSection(num);
+  }, [user, navigateToSection]);
 
   // Build TOC for active section
   const tocItems: { href: string; label: string }[] = [];
@@ -3885,9 +4464,34 @@ export default function App() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <div className="dt-root" data-dt-dark={String(dark)} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+          <svg style={{ animation: "spin .8s linear infinite" }} viewBox="0 0 24 24" fill="none" stroke="var(--dt-accent)" strokeWidth={2.5} width={28} height={28}>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round"/>
+          </svg>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <style>{CSS}</style>
+      {showLogin && (
+        <LoginModal
+          onSuccess={() => {
+            setShowLogin(false);
+            if (pendingSection) {
+              navigateToSection(pendingSection);
+              setPendingSection(null);
+            }
+          }}
+        />
+      )}
       <div className="dt-root" data-dt-dark={String(dark)}>
         {/* Topbar */}
         <header className="dt-topbar">
@@ -3917,6 +4521,26 @@ export default function App() {
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
                 Seções
+              </button>
+            )}
+            {user ? (
+              <button
+                className="dt-back-btn"
+                title={user.email ?? ""}
+                onClick={async () => { await signOut(); setView("landing"); }}
+                style={{ gap: 6 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} width={14} height={14}>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Sair
+              </button>
+            ) : (
+              <button
+                className="dt-back-btn"
+                onClick={() => setShowLogin(true)}
+              >
+                Entrar
               </button>
             )}
             <button
