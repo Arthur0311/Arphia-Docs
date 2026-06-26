@@ -9,7 +9,7 @@ import "./shared/styles/index.css";
 const router = createBrowserRouter([
   { path: "/",          element: <LandingPage /> },
   { path: "/damatools", element: <DamaToolsApp /> },
-], { basename: '/Arphia-Docs' });
+], { basename: import.meta.env.BASE_URL });
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
