@@ -55,15 +55,34 @@ async function dbInsert(table: string, rows: object[]) {
 function readMarkdown(): string {
   const mdPath = new URL("../processo-desenvolvimento-arphia.md", import.meta.url);
   const raw = readFileSync(mdPath, "utf-8");
-  // Normalize Windows CRLF → LF
   return raw.replace(/\r\n/g, "\n");
 }
 
-// ─── Split markdown into per-section rows ────────────────────────────────────
+// ─── Split markdown into per-section rows (code-fence aware) ─────────────────
+//
+// A naive split on /\n(?=## )/ would break on ## headings that appear inside
+// fenced code blocks (e.g. the spec template in section 14.4). This function
+// scans line-by-line, tracking fence depth, and only splits on ## headings
+// that are outside any code fence.
+//
 function splitMarkdownIntoSections(rawMd: string) {
-  const parts = rawMd.split(/\n(?=## )/);
+  const lines = rawMd.split("\n");
 
-  const introContent = parts[0].trimEnd();
+  // Collect the line indices where a top-level ## section heading starts
+  // (i.e. outside any code fence).
+  const sectionStartLines: number[] = [];
+  let inFence = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Toggle fence state on lines that start with ``` (with any optional lang tag)
+    if (/^```/.test(line)) {
+      inFence = !inFence;
+    }
+    if (!inFence && line.startsWith("## ")) {
+      sectionStartLines.push(i);
+    }
+  }
 
   const rows: Array<{
     num: string;
@@ -74,28 +93,40 @@ function splitMarkdownIntoSections(rawMd: string) {
     sort_order: number;
   }> = [];
 
+  // Everything before the first ## heading is the intro / TOC
+  const introLines = sectionStartLines.length > 0
+    ? lines.slice(0, sectionStartLines[0])
+    : lines;
   rows.push({
     num: "0",
     title: "Sumário",
     icon: "file",
     description: "Introdução e sumário geral do documento",
-    content: introContent,
+    content: introLines.join("\n").trimEnd(),
     sort_order: 0,
   });
 
-  for (const part of parts.slice(1)) {
-    const numMatch = part.match(/^## (\d+)\./);
-    if (!numMatch) continue;
+  // Each subsequent block runs from one ## heading to the next
+  for (let idx = 0; idx < sectionStartLines.length; idx++) {
+    const start = sectionStartLines[idx];
+    const end = idx + 1 < sectionStartLines.length
+      ? sectionStartLines[idx + 1]
+      : lines.length;
+
+    const heading = lines[start];
+    const numMatch = heading.match(/^## (\d+)\.\s+(.+)/);
+    if (!numMatch) continue; // skip non-numbered headings (e.g. ## Encerramento)
 
     const num = numMatch[1];
     const meta = SECTIONS_DATA.find((s) => s.num === num);
+    const content = lines.slice(start, end).join("\n").trimEnd();
 
     rows.push({
       num,
-      title: meta?.title ?? part.split("\n")[0].replace(/^## \d+\.\s*/, ""),
+      title: meta?.title ?? numMatch[2],
       icon: meta?.icon ?? "file",
       description: meta?.desc ?? "",
-      content: part.trimEnd(),
+      content,
       sort_order: parseInt(num, 10),
     });
   }
@@ -111,22 +142,21 @@ async function main() {
   console.log("✂️   Splitting into sections…");
   const rows = splitMarkdownIntoSections(rawMd);
   console.log(`    Found ${rows.length} sections (including intro).`);
+  console.log(
+    "\nSections found:\n" +
+      rows.map((r) => `  [${r.num.padStart(2)}] ${r.title}`).join("\n")
+  );
 
-  console.log("🗑️   Clearing existing rows…");
+  console.log("\n🗑️   Clearing existing rows…");
   await dbDelete("doc_sections", "sort_order=gte.0");
 
   console.log("⬆️   Inserting sections into Supabase…");
-  // Insert in batches of 5 to stay within request size limits
   for (let i = 0; i < rows.length; i += 5) {
     await dbInsert("doc_sections", rows.slice(i, i + 5));
     process.stdout.write(`    ${Math.min(i + 5, rows.length)}/${rows.length}\r`);
   }
 
   console.log(`\n✅  Done — ${rows.length} sections inserted.`);
-  console.log(
-    "\nSections seeded:\n" +
-      rows.map((r) => `  [${r.num.padStart(2)}] ${r.title}`).join("\n")
-  );
 }
 
 main().catch((err) => {
