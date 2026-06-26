@@ -9,6 +9,15 @@
       <meta name="description" content="This web application offers a visually engaging platform for users to explore comprehensive architectural overviews and documentation, enhancing understanding and accessibility." />
       <meta name="robots" content="noindex, nofollow" />
       <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <script>
+        // Restaura rota SPA redirecionada pelo 404.html
+        (function () {
+          var redirect = new URLSearchParams(window.location.search).get('redirect');
+          if (redirect) {
+            history.replaceState(null, '', redirect);
+          }
+        })();
+      </script>
       
     </head>
 
