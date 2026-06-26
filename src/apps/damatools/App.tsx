@@ -482,7 +482,7 @@ function OrbitalHero({
           <div className="dt-orbit-center">
             <div className="dt-orbit-logo">
               <img
-                src="/SimboloPreto-v3.svg"
+                src={`${import.meta.env.BASE_URL}SimboloPreto-v3.svg`}
                 alt="DamaTools"
                 style={{ width: 46, height: 46, filter: "invert(1)", display: "block" }}
               />
