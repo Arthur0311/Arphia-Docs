@@ -368,7 +368,7 @@ const PRODUCTS: Product[] = [
     tagline: "Plataforma financeira modular",
     desc: "Gestão de clientes, calculadoras financeiras, calendário de operações e relatórios regulatórios — desenvolvido para instituições financeiras.",
     icon: "D",
-    logo: "/SimboloPreto-v3.svg",
+    logo: `${import.meta.env.BASE_URL}SimboloPreto-v3.svg`,
     status: "available",
     sections: 21,
     tags: ["TypeScript", "Next.js", "PostgreSQL"],
