@@ -1,6 +1,6 @@
 /**
  * Populates the `doc_sections` table in Supabase with all section metadata
- * and markdown content extracted from App.tsx.
+ * and markdown content extracted from processo-desenvolvimento-arphia.md.
  *
  * Prerequisites:
  *   1. Run `supabase/schema.sql` once in the Supabase SQL Editor.
@@ -33,7 +33,7 @@ const HEADERS = {
   Prefer: "return=minimal",
 };
 
-// ─── Supabase REST helpers (no WebSocket needed) ──────────────────────────────
+// ─── Supabase REST helpers ────────────────────────────────────────────────────
 async function dbDelete(table: string, filter: string) {
   const res = await fetch(`${BASE_URL}/${table}?${filter}`, {
     method: "DELETE",
@@ -51,29 +51,12 @@ async function dbInsert(table: string, rows: object[]) {
   if (!res.ok) throw new Error(`INSERT failed: ${res.status} ${await res.text()}`);
 }
 
-// ─── Extract markdown from App.tsx ───────────────────────────────────────────
-function extractMarkdownFromApp(): string {
-  const raw = readFileSync(
-    new URL("../src/apps/damatools/App.tsx", import.meta.url),
-    "utf-8"
-  );
-  // Normalize Windows CRLF → LF so markers work on any OS
-  const appSource = raw.replace(/\r\n/g, "\n");
-
-  const startMarker = "function buildMarkdown(): string {\n  return `";
-  const endMarker = "`;\n}";
-
-  const start = appSource.indexOf(startMarker);
-  if (start === -1) throw new Error("Could not find buildMarkdown function in App.tsx");
-
-  const contentStart = start + startMarker.length;
-  const end = appSource.lastIndexOf(endMarker);
-  if (end === -1) throw new Error("Could not find end of buildMarkdown function");
-
-  return appSource
-    .slice(contentStart, end)
-    .replace(/\\`/g, "`")
-    .replace(/\\\$/g, "$");
+// ─── Read markdown from the source file ──────────────────────────────────────
+function readMarkdown(): string {
+  const mdPath = new URL("../processo-desenvolvimento-arphia.md", import.meta.url);
+  const raw = readFileSync(mdPath, "utf-8");
+  // Normalize Windows CRLF → LF
+  return raw.replace(/\r\n/g, "\n");
 }
 
 // ─── Split markdown into per-section rows ────────────────────────────────────
@@ -122,8 +105,8 @@ function splitMarkdownIntoSections(rawMd: string) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log("📖  Reading markdown from App.tsx…");
-  const rawMd = extractMarkdownFromApp();
+  console.log("📖  Reading markdown from processo-desenvolvimento-arphia.md…");
+  const rawMd = readMarkdown();
 
   console.log("✂️   Splitting into sections…");
   const rows = splitMarkdownIntoSections(rawMd);

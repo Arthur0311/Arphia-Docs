@@ -2295,15 +2295,15 @@ Mapeamento das ameaças do OWASP Top 10 para as mitigações no projeto:
 
 | Ameaça | Mitigação aplicada |
 |---|---|
-| Broken Access Control | Verificação em três camadas (14.4); IDOR prevention obrigatório |
+| Broken Access Control | Verificação em três camadas (15.4); IDOR prevention obrigatório |
 | Cryptographic Failures | TLS 1.2+; argon2 para senhas; campos sensíveis criptografados |
 | Injection (SQL, etc.) | Prisma parametriza queries automaticamente; `$queryRaw` apenas com revisão obrigatória do tech lead |
 | Insecure Design | Arquitetura modular com fronteiras explícitas; threat modeling antes de features sensíveis |
-| Security Misconfiguration | Headers de segurança configurados (14.8); ambientes endurecidos; sem defaults perigosos |
+| Security Misconfiguration | Headers de segurança configurados (15.8); ambientes endurecidos; sem defaults perigosos |
 | Vulnerable Components | Dependabot ativo; `npm audit` no CI; revisão antes de novas dependências |
 | Auth Failures | Auth.js; MFA para admin; rate limiting; políticas modernas de senha |
 | Software & Data Integrity | Lockfiles versionados; CI verifica integridade; assinaturas em releases |
-| Logging & Monitoring Failures | Logs estruturados; Sentry; alertas de padrões suspeitos (14.10) |
+| Logging & Monitoring Failures | Logs estruturados; Sentry; alertas de padrões suspeitos (15.10) |
 | SSRF | Validação de URLs em qualquer integração externa; whitelist de hosts |
 
 ### 15.7 Gestão de secrets e variáveis de ambiente
@@ -2533,7 +2533,7 @@ O sistema de monitoramento deve atender a cinco requisitos inegociáveis:
 
 O monitoramento do DamaTools se organiza em cinco pilares, cada um com ferramenta, métrica e alerta próprios:
 
-#### 16.3.1 Monitoramento de erros — Sentry
+#### 17.3.1 Monitoramento de erros — Sentry
 
 O Sentry constitui a ferramenta central de captura de erros. Deve ser integrado tanto no backend (Node.js/Next.js) quanto no frontend (React), cobrindo:
 
@@ -2568,7 +2568,7 @@ O Sentry constitui a ferramenta central de captura de erros. Deve ser integrado 
 
 **O que não capturar:** dados pessoais (CPF, CNPJ), valores monetários de operações, conteúdo de bodies de requisição e tokens de autenticação. O `beforeSend` do Sentry deve ser configurado para sanitizar esses campos antes do envio.
 
-#### 16.3.2 Monitoramento de disponibilidade — UptimeRobot
+#### 17.3.2 Monitoramento de disponibilidade — UptimeRobot
 
 O UptimeRobot (plano gratuito) realiza verificações externas de disponibilidade, independentes da infraestrutura da Arphia:
 
@@ -2616,7 +2616,7 @@ O UptimeRobot deve verificar a presença da keyword `"ok"` na resposta. Se o ban
 - Recuperação → notificação de recovery no mesmo canal
 - Status page pública (opcional, via UptimeRobot) disponível para clientes consultarem
 
-#### 16.3.3 Monitoramento de performance
+#### 17.3.3 Monitoramento de performance
 
 Na fase inicial (equipe de 3 pessoas, volume baixo), a abordagem de performance deve ser pragmática — evitar a complexidade de ferramentas de APM completas (Datadog, New Relic) e adotar mecanismos leves que forneçam os sinais essenciais.
 
@@ -2669,7 +2669,7 @@ export function metricsMiddleware(req, res, next) {
 
 **Evolução futura:** quando o volume de requisições justificar, considerar a adoção de Grafana Cloud (tier gratuito) ou Prometheus para dashboards de performance histórica. Essa migração não exige mudanças na aplicação se os logs já estiverem estruturados conforme descrito.
 
-#### 16.3.4 Logs estruturados
+#### 17.3.4 Logs estruturados
 
 Os logs constituem o registro histórico de tudo que acontece na aplicação. Devem seguir formato estruturado (JSON) para possibilitar consulta, filtragem e análise automatizada.
 
@@ -2742,7 +2742,7 @@ export const logger = pino({
 
 O campo `requestId` (gerado no início de cada requisição via middleware) permite rastrear toda a cadeia de eventos de uma única operação nos logs.
 
-#### 16.3.5 Métricas de infraestrutura
+#### 17.3.5 Métricas de infraestrutura
 
 O servidor (Droplet DigitalOcean) deve ser monitorado quanto ao consumo de recursos do sistema operacional:
 
@@ -2892,7 +2892,7 @@ Para implementar essa diferenciação, adicionar a tag `module` em todo erro rep
 
 ### 17.8 Etapas de implantação do monitoramento
 
-A implantação do monitoramento segue o ritmo do roadmap geral (Seção 17) e não deve ser tratada como atividade à parte — cada ambiente e ferramenta é configurado junto com a infraestrutura correspondente.
+A implantação do monitoramento segue o ritmo do roadmap geral (Seção 18) e não deve ser tratada como atividade à parte — cada ambiente e ferramenta é configurado junto com a infraestrutura correspondente.
 
 **Mês 1 — Fundação (junto com setup de infra)**
 
