@@ -6,6 +6,7 @@
   useMemo,
 } from "react";
 import { marked } from "marked";
+import { useNavigate } from "react-router";
 import { useAuth } from "../../shared/contexts/AuthContext";
 import LoginModal from "../../shared/components/auth/LoginModal";
 import { supabase } from "../../shared/lib/supabase";
@@ -479,7 +480,13 @@ function OrbitalHero({
 
           {/* Center hub */}
           <div className="dt-orbit-center">
-            <div className="dt-orbit-logo">A</div>
+            <div className="dt-orbit-logo">
+              <img
+                src="/SimboloPreto-v3.svg"
+                alt="DamaTools"
+                style={{ width: 46, height: 46, filter: "invert(1)", display: "block" }}
+              />
+            </div>
             <div className="dt-orbit-name">DamaTools</div>
             <div className="dt-orbit-by">by Arphia</div>
           </div>
@@ -2036,6 +2043,7 @@ type DbSection = {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
+  const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const [dark, setDark] = useState(false);
   const [view, setView] = useState<"landing" | "doc">(
@@ -2241,7 +2249,7 @@ export default function App() {
         <header className="dt-topbar">
           <button
             className="dt-brand"
-            onClick={() => setView("landing")}
+            onClick={() => navigate("/")}
           >
             <span className="dt-brand-mark">A</span>
             Arphia

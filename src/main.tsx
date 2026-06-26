@@ -1,12 +1,18 @@
 
 import { createRoot } from "react-dom/client";
-import App from "./apps/damatools/App.tsx";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import { AuthProvider } from "./shared/contexts/AuthContext.tsx";
+import DamaToolsApp from "./apps/damatools/App.tsx";
+import LandingPage from "./apps/home/LandingPage.tsx";
 import "./shared/styles/index.css";
+
+const router = createBrowserRouter([
+  { path: "/",          element: <LandingPage /> },
+  { path: "/damatools", element: <DamaToolsApp /> },
+]);
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
-    <App />
+    <RouterProvider router={router} />
   </AuthProvider>
 );
-  
